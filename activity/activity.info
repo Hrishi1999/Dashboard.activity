@@ -1,0 +1,8 @@
+[Activity]
+name = Dashboard
+activity_version = 1
+bundle_id = org.sugarlabs.Dashboard
+exec = sugar-activity activity.DashboardActivity
+icon = activity-helloworld
+license = GPLv2+
+repository = https://github.com/Hrishi1999/Dashboard.Activity.git
