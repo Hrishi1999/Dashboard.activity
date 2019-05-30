@@ -29,6 +29,8 @@ from sugar3.graphics import style
 from sugar3.activity.widgets import ActivityButton
 from sugar3.activity.widgets import StopButton
 from sugar3.datastore import datastore
+from sugar3.graphics.xocolor import XoColor
+from sugar3 import profile
 
 from jarabe.model import bundleregistry
 from jarabe.journal import misc
@@ -193,7 +195,7 @@ class DashboardActivity(activity.Activity):
             new = []
             new.append(dsobject.metadata['title'])
             new.append(misc.get_icon_name(dsobject.metadata))
-            new.append(dsobject.metadata)
+            #new.append(profile.get_color())
             treeview_list.append(new)
 
             if dsobject.metadata['mime_type'] in mime_types:
@@ -201,7 +203,7 @@ class DashboardActivity(activity.Activity):
 
         # treeview for Journal entries
 
-        liststore = Gtk.ListStore(str, str, datastore.DSMetadata)
+        liststore = Gtk.ListStore(str, str)
         treeview = Gtk.TreeView(liststore)
 
         for item in treeview_list:
@@ -213,27 +215,27 @@ class DashboardActivity(activity.Activity):
             column = Gtk.TreeViewColumn(col_title, renderer, text=0)
 
             icon_renderer = CellRendererActivityIcon()
-            column2 = Gtk.TreeViewColumn("Starred", icon_renderer, text=0)
+            column2 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
             column2.add_attribute(icon_renderer, 'file-name',
-                                    0)
+                                    1)
+            # column2.add_attribute(icon_renderer, 'xo-color',
+            #                         2)
             treeview.append_column(column2)
             treeview.append_column(column)
 
         selected_row = treeview.get_selection()
         selected_row.connect("changed", self._item_select_cb)
 
-        # cell = Gtk.CellRendererText()
-        # cell_icon = CellRendererActivityIcon()
-    
-        # col1 = Gtk.TreeViewColumn()
-        # col1.add_attribute(cell_icon, 'file-name',
-        #                      "asd")
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_can_focus(False)
+        scrolled_window.set_policy(Gtk.PolicyType.NEVER,
+                                         Gtk.PolicyType.AUTOMATIC)
+        scrolled_window.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled_window.show()
 
-        # col = Gtk.TreeViewColumn("Recently Opened Activities", cell, text=0)
-        # treeview.append_column(col1)
-        # treeview.append_column(col)
+        scrolled_window.add(treeview)
 
-        hbox_tree.add(treeview)
+        hbox_tree.add(scrolled_window)
 
         label_total_activities.set_text(str(len(registry)))
         label_journal_entries.set_text(str(journal_entries))
