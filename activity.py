@@ -116,9 +116,6 @@ class DashboardActivity(activity.Activity):
         label_dashboard = Gtk.Label()
         label_dashboard.set_markup(_("<b>Dashboard</b>"))
 
-        label_dashboard = Gtk.Label()
-        label_dashboard.set_markup(_("<b>Dashboard</b>"))
-
         # label for total activities
         label_TA = Gtk.Label()
         label_TA.set_markup(_("<b>Activities Installed</b>"))
@@ -148,9 +145,7 @@ class DashboardActivity(activity.Activity):
         label_placeholder = Gtk.Label(_("Recently opened activities"))
 
         # pie chart
-
         self.labels_and_values = ChartData(self)
-        #hbox_tree.add(label_placeholder)
         self.labels_and_values.connect("label-changed", self._label_changed)
         self.labels_and_values.connect("value-changed", self._value_changed)
 
@@ -195,7 +190,9 @@ class DashboardActivity(activity.Activity):
             new = []
             new.append(dsobject.metadata['title'])
             new.append(misc.get_icon_name(dsobject.metadata))
-            #new.append(profile.get_color())
+            new.append(dsobject.metadata['activity_id'])
+            _logger.info(dsobject.get_object_id())
+            new.append(profile.get_color())
             treeview_list.append(new)
 
             if dsobject.metadata['mime_type'] in mime_types:
@@ -203,8 +200,9 @@ class DashboardActivity(activity.Activity):
 
         # treeview for Journal entries
 
-        liststore = Gtk.ListStore(str, str)
+        liststore = Gtk.ListStore(str, str, str, object)
         treeview = Gtk.TreeView(liststore)
+        #treeview.set_headers_visible(False)
 
         for item in treeview_list:
             liststore.append(item)
@@ -218,8 +216,8 @@ class DashboardActivity(activity.Activity):
             column2 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
             column2.add_attribute(icon_renderer, 'file-name',
                                     1)
-            # column2.add_attribute(icon_renderer, 'xo-color',
-            #                         2)
+            column2.add_attribute(icon_renderer, 'xo-color',
+                                     3)
             treeview.append_column(column2)
             treeview.append_column(column)
 
@@ -233,14 +231,19 @@ class DashboardActivity(activity.Activity):
         scrolled_window.set_shadow_type(Gtk.ShadowType.NONE)
         scrolled_window.show()
 
+        #label for recent activities
+        label_rec = Gtk.Label(expand=False)
+        label_rec.set_markup("<b>Recently Opened Activities</b>")
+        #hbox_tree.add(label_rec)
+        
         scrolled_window.add(treeview)
-
         hbox_tree.add(scrolled_window)
 
         label_total_activities.set_text(str(len(registry)))
         label_journal_entries.set_text(str(journal_entries))
         label_contribs.set_text(str(len(files_list)))
 
+        # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
         grid.attach_next_to(label_empt, label_dashboard, Gtk.PositionType.BOTTOM, 6, 1)
         grid.attach_next_to(vbox_total_activities, label_empt, Gtk.PositionType.RIGHT, 50, 35)
@@ -252,8 +255,11 @@ class DashboardActivity(activity.Activity):
 
     def _item_select_cb(self, selection):
         model, row = selection.get_selected()
+        registry = bundleregistry.get_registry()
+        bundle = registry.get_bundle(model[row][1])
+
         if row is not None:
-            misc.launch(model[row][1])
+            misc.launch(bundle)
 
     def _chart_size_allocate(self, widget, allocation):
         self._render_chart()
