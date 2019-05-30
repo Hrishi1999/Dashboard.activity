@@ -24,23 +24,20 @@ from gettext import gettext as _
 
 from sugar3.activity import activity
 from sugar3.graphics.toolbarbox import ToolbarBox
+from sugar3.graphics.icon import Icon, CellRendererIcon
+from sugar3.graphics import style
 from sugar3.activity.widgets import ActivityButton
 from sugar3.activity.widgets import StopButton
 from sugar3.datastore import datastore
+
 from jarabe.model import bundleregistry
+from jarabe.journal import misc
 
 from charts import Chart
 from readers import JournalReader
 from collections import Counter
 import utils
 import os
-
-from jarabe.journal.listmodel import ListModel
-from jarabe.journal.palettes import ObjectPalette, BuddyPalette
-from jarabe.journal import model
-from jarabe.journal import misc
-from jarabe.journal import journalwindow
-from jarabe.journal.listview import ListView
 
 
 # GUI colors
@@ -56,6 +53,9 @@ _CHART_FILE = utils.get_chart_file(_ACTIVITY_DIR)
 _logger = logging.getLogger('analyze-journal-activity')
 _logger.setLevel(logging.DEBUG)
 logging.basicConfig()
+
+met = []
+#met2 = {}
 
 class DashboardActivity(activity.Activity):
 
@@ -92,7 +92,7 @@ class DashboardActivity(activity.Activity):
 
         # Grid as the main container
         grid = Gtk.Grid(column_spacing=5.5, row_spacing=3)
-      
+        #grid,set_hexpand(True)
         self.add(grid)
         self.set_canvas(grid)
 
@@ -105,7 +105,7 @@ class DashboardActivity(activity.Activity):
         vbox_journal_entries.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
         vbox_total_contribs.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
         
-        hbox_tree = Gtk.HBox()
+        hbox_tree = Gtk.VBox()
         hbox_tree.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
 
         hbox_pie = Gtk.HBox()
@@ -143,16 +143,12 @@ class DashboardActivity(activity.Activity):
 
         # empty label(s)
         label_empt = Gtk.Label("")
-        label_placeholder = Gtk.Label("Placeholder for Journal Entries")
+        label_placeholder = Gtk.Label(_("Recently opened activities"))
 
         # pie chart
 
-        treeview = ListView(self, enable_multi_operations=True)
-        tree_view = treeview.tree_view
-        treeview.show_all()
-
         self.labels_and_values = ChartData(self)
-        hbox_tree.add(treeview)
+        #hbox_tree.add(label_placeholder)
         self.labels_and_values.connect("label-changed", self._label_changed)
         self.labels_and_values.connect("value-changed", self._value_changed)
 
@@ -166,7 +162,7 @@ class DashboardActivity(activity.Activity):
         reader = JournalReader()
         self._graph_from_reader(reader)
         self.current_chart = Chart("pie")
-        self.update_chart()
+        self.update_chart()     
 
         # font
         font_main = Pango.FontDescription("Granada 14")
@@ -188,13 +184,56 @@ class DashboardActivity(activity.Activity):
         mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
                         'image/png', 'image/tiff', 'application/pdf',
                         'text/plain']
+        
         label_test = Gtk.Label()
-
+        treeview_list = []
+        
         # to check journal entries which are only a file
         for dsobject in dsobjects:
+            new = []
+            new.append(dsobject.metadata['title'])
+            new.append(misc.get_icon_name(dsobject.metadata))
+            new.append(dsobject.metadata)
+            treeview_list.append(new)
+
             if dsobject.metadata['mime_type'] in mime_types:
                 files_list.append(dsobject.metadata['title'])
-                #files_list.append('\n')
+
+        # treeview for Journal entries
+
+        liststore = Gtk.ListStore(str, str, datastore.DSMetadata)
+        treeview = Gtk.TreeView(liststore)
+
+        for item in treeview_list:
+            liststore.append(item)
+
+        for i, col_title in enumerate(["Recently Opened Activities"]):
+            
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(col_title, renderer, text=0)
+
+            icon_renderer = CellRendererActivityIcon()
+            column2 = Gtk.TreeViewColumn("Starred", icon_renderer, text=0)
+            column2.add_attribute(icon_renderer, 'file-name',
+                                    0)
+            treeview.append_column(column2)
+            treeview.append_column(column)
+
+        selected_row = treeview.get_selection()
+        selected_row.connect("changed", self._item_select_cb)
+
+        # cell = Gtk.CellRendererText()
+        # cell_icon = CellRendererActivityIcon()
+    
+        # col1 = Gtk.TreeViewColumn()
+        # col1.add_attribute(cell_icon, 'file-name',
+        #                      "asd")
+
+        # col = Gtk.TreeViewColumn("Recently Opened Activities", cell, text=0)
+        # treeview.append_column(col1)
+        # treeview.append_column(col)
+
+        hbox_tree.add(treeview)
 
         label_total_activities.set_text(str(len(registry)))
         label_journal_entries.set_text(str(journal_entries))
@@ -209,20 +248,24 @@ class DashboardActivity(activity.Activity):
         grid.attach_next_to(hbox_pie, hbox_tree, Gtk.PositionType.RIGHT, 75, 100)
         grid.show_all()
 
+    def _item_select_cb(self, selection):
+        model, row = selection.get_selected()
+        if row is not None:
+            misc.launch(model[row][1])
+
     def _chart_size_allocate(self, widget, allocation):
         self._render_chart()
 
     def _render_chart(self):
         if self.current_chart is None or self.charts_area is None:
             return
-
         try:
             # Resize the chart for all the screen sizes
             alloc = self.get_allocation()
             #alloc = self.charts_area.get_allocation()
 
-            new_width = alloc.width - 300
-            new_height = alloc.height - 300
+            new_width = alloc.width - 350
+            new_height = alloc.height - 350
 
             self.current_chart.width = new_width
             self.current_chart.height = new_height
@@ -436,3 +479,16 @@ class ChartData(Gtk.TreeView):
             activity.add_alert(alert)
 
             alert.show()
+            
+
+class CellRendererActivityIcon(CellRendererIcon):
+    __gtype_name__ = 'JournalCellRendererActivityIcon'
+
+    def __init__(self):
+        CellRendererIcon.__init__(self)
+
+        self.props.width = style.GRID_CELL_SIZE
+        self.props.height = style.GRID_CELL_SIZE
+        self.props.size = style.STANDARD_ICON_SIZE
+        self.props.mode = Gtk.CellRendererMode.ACTIVATABLE
+
