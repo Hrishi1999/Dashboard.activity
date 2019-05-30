@@ -93,10 +93,15 @@ class DashboardActivity(activity.Activity):
         toolbar_box.show()
 
         # Grid as the main container
+        frame = Gtk.Frame()
+        self.add(frame)
+        self.set_canvas(frame)
+        frame.show()
         grid = Gtk.Grid(column_spacing=5.5, row_spacing=3)
-        #grid,set_hexpand(True)
-        self.add(grid)
-        self.set_canvas(grid)
+        grid.set_border_width(20)
+        grid.set_halign(Gtk.Align.CENTER)
+        frame.add(grid)
+
 
         vbox_total_activities = Gtk.VBox()
         vbox_journal_entries = Gtk.VBox()
@@ -245,8 +250,7 @@ class DashboardActivity(activity.Activity):
 
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
-        grid.attach_next_to(label_empt, label_dashboard, Gtk.PositionType.BOTTOM, 6, 1)
-        grid.attach_next_to(vbox_total_activities, label_empt, Gtk.PositionType.RIGHT, 50, 35)
+        grid.attach_next_to(vbox_total_activities, label_dashboard, Gtk.PositionType.BOTTOM, 50, 35)
         grid.attach_next_to(vbox_journal_entries, vbox_total_activities, Gtk.PositionType.RIGHT, 50, 35)
         grid.attach_next_to(vbox_total_contribs, vbox_journal_entries, Gtk.PositionType.RIGHT, 50, 35)
         grid.attach_next_to(hbox_tree, vbox_total_activities, Gtk.PositionType.BOTTOM, 75, 100)
