@@ -34,6 +34,7 @@ from sugar3 import profile
 
 from jarabe.model import bundleregistry
 from jarabe.journal import misc
+from jarabe.journal.bundlelauncher import launch_bundle
 
 from charts import Chart
 from readers import JournalReader
@@ -195,6 +196,8 @@ class DashboardActivity(activity.Activity):
             new.append(misc.get_icon_name(dsobject.metadata))
             new.append(dsobject.metadata['activity_id'])
             new.append(profile.get_color())
+            new.append(dsobject.get_object_id())
+            new.append(dsobject.metadata)
             self.treeview_list.append(new)
 
             if dsobject.metadata['mime_type'] in mime_types:
@@ -203,10 +206,12 @@ class DashboardActivity(activity.Activity):
                 new2.append(misc.get_icon_name(dsobject.metadata))
                 new2.append(dsobject.metadata['activity_id'])
                 new2.append(profile.get_color())
+                new2.append(dsobject.get_object_id())
+                new2.append(dsobject.metadata)
                 self.files_list.append(new2)
         # treeview for Journal entries
 
-        self.liststore = Gtk.ListStore(str, str, str, object)
+        self.liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata)
         self.treeview = Gtk.TreeView(self.liststore)
         self.treeview.set_headers_visible(False)
 
@@ -287,12 +292,10 @@ class DashboardActivity(activity.Activity):
 
        
     def _on_name_combo_changed(self, combo):
-        #self.liststore.clear()
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
             model = combo.get_model()
             selected_item = model[tree_iter][0]
-            #self.label_treeview.set_text(selected_item)
             if selected_item == "Files":
                 self._add_to_treeview(self.files_list)
             elif selected_item == "All":
@@ -305,7 +308,10 @@ class DashboardActivity(activity.Activity):
         bundle = registry.get_bundle(model[row][1])
 
         if row is not None:
-            misc.launch(bundle)
+            metadata = model[row][5]
+            bundle_id = metadata.get('activity', '')
+            launch_bundle(bundle_id, model[row][4])
+            #misc.launch(bundle)
 
     def _chart_size_allocate(self, widget, allocation):
         self._render_chart()
