@@ -143,7 +143,7 @@ class PieChart(Chart):
         cx.select_font_face(self.options.axis.tickFont,
                             cairo.FONT_SLANT_NORMAL,
                             cairo.FONT_WEIGHT_NORMAL)
-        cx.set_font_size(self.options.axis.tickFontSize)
+        cx.set_font_size(10)
 
         cx.set_source_rgb(*hex2rgb(self.options.axis.labelColor))
 

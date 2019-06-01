@@ -32,7 +32,7 @@ from sugar3.activity.widgets import StopButton
 from sugar3.datastore import datastore
 from sugar3.graphics.xocolor import XoColor
 from sugar3 import profile
-
+from sugar3 import util
 from jarabe.model import bundleregistry
 from jarabe.journal import misc
 
@@ -41,24 +41,13 @@ from readers import JournalReader
 from collections import Counter
 import utils
 import os
-
-
-# GUI colors
-_COLOR1 = utils.get_user_fill_color()
-_COLOR2 = utils.get_user_stroke_color()
-_WHITE = Gdk.color_parse("white")
-
-# paths
-_ACTIVITY_DIR = os.path.join(activity.get_activity_root(), "data/")
-_CHART_FILE = utils.get_chart_file(_ACTIVITY_DIR)
+import time
 
 # logging 
 _logger = logging.getLogger('analyze-journal-activity')
 _logger.setLevel(logging.DEBUG)
 logging.basicConfig()
 
-met = []
-#met2 = {}
 
 class DashboardActivity(activity.Activity):
 
@@ -157,9 +146,9 @@ class DashboardActivity(activity.Activity):
         eventbox = Gtk.EventBox()
         self.charts_area = ChartArea(self)
         self.charts_area.connect('size_allocate', self._chart_size_allocate)
-        eventbox.modify_bg(Gtk.StateType.NORMAL, _WHITE)
+        eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
         eventbox.add(self.charts_area)
-        hbox_pie.add(eventbox)
+        hbox_pie.pack_start(eventbox, True, True, 0)
 
         reader = JournalReader()
         self._graph_from_reader(reader)
@@ -192,12 +181,14 @@ class DashboardActivity(activity.Activity):
         # to check journal entries which are only a file
         for dsobject in dsobjects:
             new = []
+           
             new.append(dsobject.metadata['title'])
             new.append(misc.get_icon_name(dsobject.metadata))
             new.append(dsobject.metadata['activity_id'])
             new.append(profile.get_color())
             new.append(dsobject.get_object_id())
             new.append(dsobject.metadata)
+            new.append(misc.get_date(dsobject.metadata))
             self.treeview_list.append(new)
 
             if dsobject.metadata['mime_type'] in mime_types:
@@ -208,27 +199,32 @@ class DashboardActivity(activity.Activity):
                 new2.append(profile.get_color())
                 new2.append(dsobject.get_object_id())
                 new2.append(dsobject.metadata)
+                new2.append(misc.get_date(dsobject.metadata))
                 self.files_list.append(new2)
         # treeview for Journal entries
 
-        self.liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata)
+        self.liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str)
         self.treeview = Gtk.TreeView(self.liststore)
         self.treeview.set_headers_visible(False)
 
         for i, col_title in enumerate(["Recently Opened Activities"]):
             
-            renderer = Gtk.CellRendererText()
-            column = Gtk.TreeViewColumn(col_title, renderer, text=0)
-
+            renderer_title = Gtk.CellRendererText()
+            renderer_title.set_property('ellipsize', Pango.EllipsizeMode.NONE)
             icon_renderer = CellRendererActivityIcon()
-            column2 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
-            column2.add_attribute(icon_renderer, 'file-name',
-                                    1)
-            column2.add_attribute(icon_renderer, 'xo-color',
-                                    3)
-            self.treeview.append_column(column2)
-            self.treeview.append_column(column)
+            renderer_time = Gtk.CellRendererText()
 
+            column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
+            column1.add_attribute(icon_renderer, 'file-name',
+                                    1)
+            column1.add_attribute(icon_renderer, 'xo-color',
+                                    3)
+            column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
+            column3 = Gtk.TreeViewColumn(col_title, renderer_title, text=6)
+
+            self.treeview.append_column(column1)
+            self.treeview.append_column(column2)
+            self.treeview.append_column(column3)
 
         # combobox for sort selection
         cbox_store = Gtk.ListStore(str)
@@ -324,8 +320,8 @@ class DashboardActivity(activity.Activity):
             alloc = self.get_allocation()
             #alloc = self.charts_area.get_allocation()
 
-            new_width = alloc.width - 350
-            new_height = alloc.height - 350
+            new_width = alloc.width - 520
+            new_height = alloc.height - 520
 
             self.current_chart.width = new_width
             self.current_chart.height = new_height
