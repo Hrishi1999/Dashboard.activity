@@ -23,6 +23,7 @@ import logging
 from gettext import gettext as _
 
 from sugar3.activity import activity
+from sugar3.activity.activity import launch_bundle
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.graphics.icon import Icon, CellRendererIcon
 from sugar3.graphics import style
@@ -34,7 +35,6 @@ from sugar3 import profile
 
 from jarabe.model import bundleregistry
 from jarabe.journal import misc
-from jarabe.journal.bundlelauncher import launch_bundle
 
 from charts import Chart
 from readers import JournalReader
