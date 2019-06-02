@@ -82,7 +82,7 @@ class DashboardActivity(activity.Activity):
         self.set_toolbar_box(toolbar_box)
         toolbar_box.show()
 
-        # Grid as the main container
+        # Frane as the main container
         frame = Gtk.Frame()
         self.add(frame)
         self.set_canvas(frame)
@@ -101,8 +101,8 @@ class DashboardActivity(activity.Activity):
         vbox_journal_entries.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
         vbox_total_contribs.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
         
-        hbox_tree = Gtk.VBox()
-        hbox_tree.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
+        vbox_tree = Gtk.VBox()
+        vbox_tree.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
 
         hbox_pie = Gtk.HBox()
         hbox_pie.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
@@ -173,15 +173,15 @@ class DashboardActivity(activity.Activity):
         
         mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
                         'image/png', 'image/tiff', 'application/pdf',
-                        'text/plain']
+                        'text/plain', 'application/vnd.olpc-sugar']
         
         self.treeview_list = []
         self.files_list = []
+        self.old_list = []
 
         # to check journal entries which are only a file
         for dsobject in dsobjects:
             new = []
-           
             new.append(dsobject.metadata['title'])
             new.append(misc.get_icon_name(dsobject.metadata))
             new.append(dsobject.metadata['activity_id'])
@@ -189,7 +189,9 @@ class DashboardActivity(activity.Activity):
             new.append(dsobject.get_object_id())
             new.append(dsobject.metadata)
             new.append(misc.get_date(dsobject.metadata))
+            new.append(dsobject.metadata['mtime'])
             self.treeview_list.append(new)
+            self.old_list.append(new)
 
             if dsobject.metadata['mime_type'] in mime_types:
                 new2 = []
@@ -200,23 +202,28 @@ class DashboardActivity(activity.Activity):
                 new2.append(dsobject.get_object_id())
                 new2.append(dsobject.metadata)
                 new2.append(misc.get_date(dsobject.metadata))
+                new2.append(dsobject.metadata['mtime'])
                 self.files_list.append(new2)
+
+            self.old_list = sorted(self.old_list, key=lambda x:x[6])
+
         # treeview for Journal entries
 
-        self.liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str)
+        self.liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str, str)
         self.treeview = Gtk.TreeView(self.liststore)
         self.treeview.set_headers_visible(False)
 
         for i, col_title in enumerate(["Recently Opened Activities"]):
             
             renderer_title = Gtk.CellRendererText()
-            renderer_title.set_property('ellipsize', Pango.EllipsizeMode.NONE)
+            #renderer_title.set_property('ellipsize', Pango.EllipsizeMode.END)
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
 
             column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
             column1.add_attribute(icon_renderer, 'file-name',
                                     1)
+            column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
             column1.add_attribute(icon_renderer, 'xo-color',
                                     3)
             column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
@@ -257,7 +264,7 @@ class DashboardActivity(activity.Activity):
         hbox_tree2.pack_start(self.label_treeview, False, True, 0)
         hbox_tree2.pack_start(combobox, True, True, 0)
 
-        hbox_tree.pack_start(hbox_tree2, False, False, 5)
+        vbox_tree.pack_start(hbox_tree2, False, False, 5)
         scrolled_window.add(self.treeview)
 
         #label for recent activities
@@ -265,7 +272,7 @@ class DashboardActivity(activity.Activity):
         label_rec.set_markup("<b>Recently Opened Activities</b>")
         #hbox_tree.add(label_rec)
         
-        hbox_tree.add(scrolled_window)
+        vbox_tree.add(scrolled_window)
 
         label_total_activities.set_text(str(len(registry)))
         label_journal_entries.set_text(str(journal_entries))
@@ -276,17 +283,15 @@ class DashboardActivity(activity.Activity):
         grid.attach_next_to(vbox_total_activities, label_dashboard, Gtk.PositionType.BOTTOM, 50, 35)
         grid.attach_next_to(vbox_journal_entries, vbox_total_activities, Gtk.PositionType.RIGHT, 50, 35)
         grid.attach_next_to(vbox_total_contribs, vbox_journal_entries, Gtk.PositionType.RIGHT, 50, 35)
-        grid.attach_next_to(hbox_tree, vbox_total_activities, Gtk.PositionType.BOTTOM, 75, 100)
-        grid.attach_next_to(hbox_pie, hbox_tree, Gtk.PositionType.RIGHT, 75, 100)
+        grid.attach_next_to(vbox_tree, vbox_total_activities, Gtk.PositionType.BOTTOM, 75, 100)
+        grid.attach_next_to(hbox_pie, vbox_tree, Gtk.PositionType.RIGHT, 75, 100)
         grid.show_all()
 
     def _add_to_treeview(self, tlist):
-
         self.liststore.clear()
         for item in tlist:
             self.liststore.append(item)
 
-       
     def _on_name_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
@@ -296,7 +301,8 @@ class DashboardActivity(activity.Activity):
                 self._add_to_treeview(self.files_list)
             elif selected_item == "All":
                 self._add_to_treeview(self.treeview_list)
-
+            elif selected_item == "Oldest":
+                self._add_to_treeview(self.old_list)
 
     def _item_select_cb(self, selection):
         model, row = selection.get_selected()
