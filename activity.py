@@ -42,6 +42,7 @@ from collections import Counter
 import utils
 import os
 import time
+import datetime
 
 # logging 
 _logger = logging.getLogger('analyze-journal-activity')
@@ -83,11 +84,18 @@ class DashboardActivity(activity.Activity):
         toolbar_box.show()
 
         # Frane as the main container
+        scrolled_window_main = Gtk.ScrolledWindow()
+        scrolled_window_main.set_can_focus(False)
+        scrolled_window_main.set_policy(Gtk.PolicyType.NEVER,
+                                         Gtk.PolicyType.AUTOMATIC)
+        scrolled_window_main.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled_window_main.show()
+        self.set_canvas(scrolled_window_main)
+
         frame = Gtk.Frame()
-        self.add(frame)
-        self.set_canvas(frame)
+        scrolled_window_main.add(frame)
         frame.show()
-        grid = Gtk.Grid(column_spacing=5.5, row_spacing=3)
+        grid = Gtk.Grid(column_spacing=6, row_spacing=3.5)
         grid.set_border_width(20)
         grid.set_halign(Gtk.Align.CENTER)
         frame.add(grid)
@@ -95,17 +103,19 @@ class DashboardActivity(activity.Activity):
         vbox_total_activities = Gtk.VBox()
         vbox_journal_entries = Gtk.VBox()
         vbox_total_contribs = Gtk.VBox()
+        hbox_heatmap = Gtk.VBox()
 
-        # VBoxes for total activities, journal entries and ??
+        # VBoxes for total activities, journal entries and total files
         vbox_total_activities.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
         vbox_journal_entries.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
         vbox_total_contribs.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
-        
+        hbox_heatmap.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
+       
         vbox_tree = Gtk.VBox()
         vbox_tree.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
 
-        hbox_pie = Gtk.HBox()
-        hbox_pie.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
+        vbox_pie = Gtk.VBox()
+        vbox_pie.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
 
         label_dashboard = Gtk.Label()
         label_dashboard.set_markup(_("<b>Dashboard</b>"))
@@ -130,6 +140,10 @@ class DashboardActivity(activity.Activity):
         label_CE = Gtk.Label()
         label_CE.set_markup(_("<b>Total Files</b>"))
         vbox_total_contribs.add(label_CE)
+
+         # label for pie
+        label_PIE = Gtk.Label()
+        label_PIE.set_markup(_("<b>Total Files</b>"))
     
         label_contribs = Gtk.Label()
         vbox_total_contribs.add(label_contribs)
@@ -148,7 +162,7 @@ class DashboardActivity(activity.Activity):
         self.charts_area.connect('size_allocate', self._chart_size_allocate)
         eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
         eventbox.add(self.charts_area)
-        hbox_pie.pack_start(eventbox, True, True, 0)
+        vbox_pie.pack_start(eventbox, True, True, 0)
 
         reader = JournalReader()
         self._graph_from_reader(reader)
@@ -173,11 +187,15 @@ class DashboardActivity(activity.Activity):
         
         mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
                         'image/png', 'image/tiff', 'application/pdf',
-                        'text/plain', 'application/vnd.olpc-sugar']
+                        'text/plain', 'application/vnd.olpc-sugar',
+                        'application/rtf', 'text/rtf', 
+                        'application/epub+zip', 'text/html',
+                        'application/x-pdf']
         
         self.treeview_list = []
         self.files_list = []
         self.old_list = []
+        self.heatmap_list = []
 
         # to check journal entries which are only a file
         for dsobject in dsobjects:
@@ -216,7 +234,6 @@ class DashboardActivity(activity.Activity):
         for i, col_title in enumerate(["Recently Opened Activities"]):
             
             renderer_title = Gtk.CellRendererText()
-            #renderer_title.set_property('ellipsize', Pango.EllipsizeMode.END)
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
 
@@ -227,7 +244,7 @@ class DashboardActivity(activity.Activity):
             column1.add_attribute(icon_renderer, 'xo-color',
                                     3)
             column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
-            column3 = Gtk.TreeViewColumn(col_title, renderer_title, text=6)
+            column3 = Gtk.TreeViewColumn(col_title, renderer_time, text=6)
 
             self.treeview.append_column(column1)
             self.treeview.append_column(column2)
@@ -278,14 +295,97 @@ class DashboardActivity(activity.Activity):
         label_journal_entries.set_text(str(journal_entries))
         label_contribs.set_text(str(len(self.files_list)))
 
+        # heatmap
+        label_heatmap = Gtk.Label(_("User Activity"))
+        grid_heatmap = Gtk.Grid(column_spacing=3, row_spacing=2)
+        grid_heatmap.set_halign(Gtk.Align.CENTER)
+        hbox_heatmap.add(label_heatmap)
+        hbox_heatmap.add(grid_heatmap)
+
+        self.dates = self._generate_dates()
+        self._build_heatmap(grid_heatmap, self.dates)
+
+        self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str, str)
+        heatmap_treeview = Gtk.TreeView(self.heatmap_liststore)
+        heatmap_treeview.set_headers_visible(False)
+
+        for i, col_title in enumerate(["Activity"]):
+            
+            renderer_title = Gtk.CellRendererText()
+            icon_renderer = CellRendererActivityIcon()
+            renderer_time = Gtk.CellRendererText()
+
+            column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
+            column1.add_attribute(icon_renderer, 'file-name',
+                                    1)
+            column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+            column1.add_attribute(icon_renderer, 'xo-color',
+                                    3)
+            column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
+            column3 = Gtk.TreeViewColumn(col_title, renderer_time, text=6)
+
+            heatmap_treeview.append_column(column1)
+            heatmap_treeview.append_column(column2)
+            heatmap_treeview.append_column(column3)
+
+        hbox_heatmap.add(heatmap_treeview)
+
+        selected_row_heatmap = heatmap_treeview.get_selection()
+        selected_row_heatmap.connect("changed", self._item_select_cb)
+
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
         grid.attach_next_to(vbox_total_activities, label_dashboard, Gtk.PositionType.BOTTOM, 50, 35)
         grid.attach_next_to(vbox_journal_entries, vbox_total_activities, Gtk.PositionType.RIGHT, 50, 35)
         grid.attach_next_to(vbox_total_contribs, vbox_journal_entries, Gtk.PositionType.RIGHT, 50, 35)
-        grid.attach_next_to(vbox_tree, vbox_total_activities, Gtk.PositionType.BOTTOM, 75, 100)
-        grid.attach_next_to(hbox_pie, vbox_tree, Gtk.PositionType.RIGHT, 75, 100)
+        grid.attach_next_to(vbox_tree, vbox_total_activities, Gtk.PositionType.BOTTOM, 75, 90)
+        grid.attach_next_to(vbox_pie, vbox_tree, Gtk.PositionType.RIGHT, 75, 90)
+        grid.attach_next_to(hbox_heatmap, vbox_tree, Gtk.PositionType.BOTTOM, 150, 75)
         grid.show_all()
+
+    def _build_heatmap(self, grid, dates):
+        j = 0
+        k = 0
+        for i in range(0, 365):
+            if (i%7 == 0):
+                j = j + 1
+                k = 0
+            k = k + 1
+            count = 0 
+            for x in range(0, len(self.old_list)):
+                date = self.old_list[x][7][:-16]
+                if date == dates[i]:
+                        count = count + 1
+            box = HeatMapBlock(dates[i], count, i)
+            box.connect('on-clicked', self._on_clicked_cb)
+            grid.attach(box, j, k, 1, 1)
+
+    def _on_clicked_cb(self, i, index):
+        _logger.info(str(index))
+        self.heatmap_liststore.clear()
+        del self.heatmap_list[:]
+        
+        for y in range(0, len(self.old_list)):
+            date = self.old_list[y][7][:-16]
+            if date == self.dates[index]:
+                self.heatmap_list.append(self.old_list[y])
+                _logger.info(self.heatmap_list[0][0])
+    
+        for item in self.heatmap_list:
+            self.heatmap_liststore.append(item)
+
+    def _generate_dates(self):
+        year = datetime.date.today().year
+
+        dt = datetime.datetime(year, 1, 1)
+        end = datetime.datetime(year, 12, 31, 23, 59, 59)
+        step = datetime.timedelta(days=1)
+
+        result = []
+        while dt < end:
+            result.append(dt.strftime('%Y-%m-%d'))
+            dt += step
+        return result
 
     def _add_to_treeview(self, tlist):
         self.liststore.clear()
@@ -313,7 +413,6 @@ class DashboardActivity(activity.Activity):
             metadata = model[row][5]
             bundle_id = metadata.get('activity', '')
             launch_bundle(bundle_id, model[row][4])
-            #misc.launch(bundle)
 
     def _chart_size_allocate(self, widget, allocation):
         self._render_chart()
@@ -553,4 +652,38 @@ class CellRendererActivityIcon(CellRendererIcon):
         self.props.height = style.GRID_CELL_SIZE
         self.props.size = style.STANDARD_ICON_SIZE
         self.props.mode = Gtk.CellRendererMode.ACTIVATABLE
+
+class HeatMapBlock(Gtk.EventBox):
+
+    __gsignals__ = {
+        'on-clicked': (GObject.SignalFlags.RUN_FIRST, None,
+                            (int,)),
+    }
+
+    def __init__(self, date, contribs, index):
+        Gtk.EventBox.__init__(self)
+
+        text = "   "
+        label = Gtk.Label(text)
+        tooltip = date + "\nContributions:" + str(contribs)
+        label.set_tooltip_text(tooltip)
+
+        self.i = index
+
+        if contribs == 0:
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#cdcfd3"))
+        elif contribs <= 2 and contribs > 0:
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#98abd1"))
+        elif contribs <= 5 and contribs > 2:
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#7996d1"))
+        elif contribs >= 6:
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#507bd3"))
+
+        self.add(label)
+        self.set_events(Gdk.EventType.BUTTON_PRESS)
+        self.connect('button-press-event', self._on_mouse)
+
+    def _on_mouse(self, w, e):
+        self.emit('on-clicked', self.i)
+
 

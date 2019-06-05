@@ -234,7 +234,7 @@ class ParseJournal():
                         activity = isactivity(dsobj)
                         if not activity:
                             self._dsdict[os.path.basename(path)][-1][
-                                'activity'] = 'media object'
+                                'activity'] = 'Media Object'
                         else:
                             self._dsdict[os.path.basename(path)][-1][
                                 'activity'] = activity
