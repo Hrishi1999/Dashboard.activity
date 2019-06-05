@@ -49,6 +49,7 @@ _logger = logging.getLogger('analyze-journal-activity')
 _logger.setLevel(logging.DEBUG)
 logging.basicConfig()
 
+COLOR1 = utils.get_user_fill_color('str')
 
 class DashboardActivity(activity.Activity):
 
@@ -143,14 +144,11 @@ class DashboardActivity(activity.Activity):
 
          # label for pie
         label_PIE = Gtk.Label()
-        label_PIE.set_markup(_("<b>Total Files</b>"))
-    
+        label_PIE.set_markup(_("<b>Most used activities</b>"))
+        vbox_pie.pack_start(label_PIE, False, True, 5)
+
         label_contribs = Gtk.Label()
         vbox_total_contribs.add(label_contribs)
-
-        # empty label(s)
-        label_empt = Gtk.Label("")
-        label_placeholder = Gtk.Label(_("Recently opened activities"))
 
         # pie chart
         self.labels_and_values = ChartData(self)
@@ -302,8 +300,8 @@ class DashboardActivity(activity.Activity):
         hbox_heatmap.add(label_heatmap)
         hbox_heatmap.add(grid_heatmap)
 
-        self.dates = self._generate_dates()
-        self._build_heatmap(grid_heatmap, self.dates)
+        self.dates, self.dates_a = self._generate_dates()
+        self._build_heatmap(grid_heatmap, self.dates, self.dates_a)
 
         self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str, str)
         heatmap_treeview = Gtk.TreeView(self.heatmap_liststore)
@@ -343,9 +341,13 @@ class DashboardActivity(activity.Activity):
         grid.attach_next_to(hbox_heatmap, vbox_tree, Gtk.PositionType.BOTTOM, 150, 75)
         grid.show_all()
 
-    def _build_heatmap(self, grid, dates):
-        j = 0
-        k = 0
+    def _build_heatmap(self, grid, dates, dates_a):
+        j = 1
+        k = 1
+        counter_days = 0
+        counter_weeks = 0
+        week_list = [0, 5, 9, 13, 18, 22, 26, 31, 35, 39, 44, 49]
+
         for i in range(0, 365):
             if (i%7 == 0):
                 j = j + 1
@@ -356,8 +358,53 @@ class DashboardActivity(activity.Activity):
                 date = self.old_list[x][7][:-16]
                 if date == dates[i]:
                         count = count + 1
-            box = HeatMapBlock(dates[i], count, i)
+            box = HeatMapBlock(dates_a[i], count, i)
             box.connect('on-clicked', self._on_clicked_cb)
+            lab_days = Gtk.Label()
+            lab_months = Gtk.Label()
+
+            # for weekdays, WIP
+            # if(k%2 == 0 and counter_days < 3):
+            #     if(counter_days==0):
+            #         lab_days.set_text(_("Mon"))
+            #     if(counter_days==1):
+            #         lab_days.set_text(_("Wed"))
+            #     if(counter_days==2):
+            #         lab_days.set_text(_("Fri"))
+            #     grid.attach(lab_days, 0, k, 1, 1)
+            #     counter_days = counter_days + 1
+            
+            if(k%4 == 0 and counter_weeks < 54):
+                if(counter_weeks==0):
+                    lab_months.set_text(_("Jan"))
+                if(counter_weeks==5):
+                    lab_months.set_text(_("Feb"))
+                if(counter_weeks==9):
+                    lab_months.set_text(_("Mar"))
+                if(counter_weeks==13):
+                    lab_months.set_text(_("Apr"))
+                if(counter_weeks==18):
+                    lab_months.set_text(_("May"))
+                if(counter_weeks==22):
+                    lab_months.set_text(_("Jun"))
+                if(counter_weeks==26):
+                    lab_months.set_text(_("Jul"))
+                if(counter_weeks==31):
+                    lab_months.set_text(_("Aug"))
+                if(counter_weeks==35):
+                    lab_months.set_text(_("Sep"))
+                if(counter_weeks==39):
+                    lab_months.set_text(_("Oct"))
+                if(counter_weeks==44):
+                    lab_months.set_text(_("Nov"))
+                if(counter_weeks==49):
+                    lab_months.set_text(_("Dec"))
+
+                if counter_weeks in week_list:
+                    grid.attach(lab_months, j, 0, 2, 1)
+
+                counter_weeks = counter_weeks + 1
+
             grid.attach(box, j, k, 1, 1)
 
     def _on_clicked_cb(self, i, index):
@@ -382,10 +429,12 @@ class DashboardActivity(activity.Activity):
         step = datetime.timedelta(days=1)
 
         result = []
+        result_a = []
         while dt < end:
+            result_a.append(dt.strftime('%a, %b %d %Y'))
             result.append(dt.strftime('%Y-%m-%d'))
             dt += step
-        return result
+        return result, result_a
 
     def _add_to_treeview(self, tlist):
         self.liststore.clear()
@@ -663,8 +712,7 @@ class HeatMapBlock(Gtk.EventBox):
     def __init__(self, date, contribs, index):
         Gtk.EventBox.__init__(self)
 
-        text = "   "
-        label = Gtk.Label(text)
+        label = Gtk.Label("   ")
         tooltip = date + "\nContributions:" + str(contribs)
         label.set_tooltip_text(tooltip)
 
@@ -683,7 +731,6 @@ class HeatMapBlock(Gtk.EventBox):
         self.set_events(Gdk.EventType.BUTTON_PRESS)
         self.connect('button-press-event', self._on_mouse)
 
-    def _on_mouse(self, w, e):
+    def _on_mouse(self, widget, event):
         self.emit('on-clicked', self.i)
-
-
+        
