@@ -297,8 +297,8 @@ class DashboardActivity(activity.Activity):
         label_heatmap = Gtk.Label(_("User Activity"))
         grid_heatmap = Gtk.Grid(column_spacing=3, row_spacing=2)
         grid_heatmap.set_halign(Gtk.Align.CENTER)
-        hbox_heatmap.add(label_heatmap)
-        hbox_heatmap.add(grid_heatmap)
+        hbox_heatmap.pack_start(label_heatmap, False, True, 5)
+        hbox_heatmap.pack_start(grid_heatmap, False, True, 5)
 
         self.dates, self.dates_a = self._generate_dates()
         self._build_heatmap(grid_heatmap, self.dates, self.dates_a)
@@ -326,7 +326,7 @@ class DashboardActivity(activity.Activity):
             heatmap_treeview.append_column(column2)
             heatmap_treeview.append_column(column3)
 
-        hbox_heatmap.add(heatmap_treeview)
+        hbox_heatmap.pack_start(heatmap_treeview, False, True, 5)
 
         selected_row_heatmap = heatmap_treeview.get_selection()
         selected_row_heatmap.connect("changed", self._item_select_cb)
@@ -363,17 +363,24 @@ class DashboardActivity(activity.Activity):
             lab_days = Gtk.Label()
             lab_months = Gtk.Label()
 
-            # for weekdays, WIP
-            # if(k%2 == 0 and counter_days < 3):
-            #     if(counter_days==0):
-            #         lab_days.set_text(_("Mon"))
-            #     if(counter_days==1):
-            #         lab_days.set_text(_("Wed"))
-            #     if(counter_days==2):
-            #         lab_days.set_text(_("Fri"))
-            #     grid.attach(lab_days, 0, k, 1, 1)
-            #     counter_days = counter_days + 1
+            # for weekdays
+            if(k%2 == 0 and counter_days < 3):
+                day = ''
+                if(counter_days==0):
+                    day = dates_a[8][:-13]
+                    lab_days.set_text(_(day))
+                if(counter_days==1):
+                    day = dates_a[10][:-13]
+                    lab_days.set_text(_(day))
+                if(counter_days==2):
+                    day = dates_a[12][:-13]
+                    lab_days.set_text(_(day))
+                _logger.info(day)
+
+                grid.attach(lab_days, 0, k, 1, 1)
+                counter_days = counter_days + 1
             
+            # for months
             if(k%4 == 0 and counter_weeks < 54):
                 if(counter_weeks==0):
                     lab_months.set_text(_("Jan"))
