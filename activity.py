@@ -1,4 +1,4 @@
-# Copyright 2009 Simon Schampijer
+# Copyright 2019 Hrishi Patel
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+# noqa: E402
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -25,31 +26,30 @@ from gettext import gettext as _
 from sugar3.activity import activity
 from sugar3.activity.activity import launch_bundle
 from sugar3.graphics.toolbarbox import ToolbarBox
-from sugar3.graphics.icon import Icon, CellRendererIcon
+from sugar3.graphics.icon import CellRendererIcon
 from sugar3.graphics import style
 from sugar3.activity.widgets import ActivityButton
 from sugar3.activity.widgets import StopButton
 from sugar3.datastore import datastore
-from sugar3.graphics.xocolor import XoColor
 from sugar3 import profile
-from sugar3 import util
+
 from jarabe.model import bundleregistry
 from jarabe.journal import misc
 
 from charts import Chart
 from readers import JournalReader
-from collections import Counter
-import utils
-import os
-import time
-import datetime
 
-# logging 
-_logger = logging.getLogger('analyze-journal-activity')
+import utils
+import datetime
+import locale
+
+# logging
+_logger = logging.getLogger('dashboard-activity')
 _logger.setLevel(logging.DEBUG)
 logging.basicConfig()
 
 COLOR1 = utils.get_user_fill_color('str')
+
 
 class DashboardActivity(activity.Activity):
 
@@ -88,7 +88,7 @@ class DashboardActivity(activity.Activity):
         scrolled_window_main = Gtk.ScrolledWindow()
         scrolled_window_main.set_can_focus(False)
         scrolled_window_main.set_policy(Gtk.PolicyType.NEVER,
-                                         Gtk.PolicyType.AUTOMATIC)
+                                        Gtk.PolicyType.AUTOMATIC)
         scrolled_window_main.set_shadow_type(Gtk.ShadowType.NONE)
         scrolled_window_main.show()
         self.set_canvas(scrolled_window_main)
@@ -107,16 +107,22 @@ class DashboardActivity(activity.Activity):
         hbox_heatmap = Gtk.VBox()
 
         # VBoxes for total activities, journal entries and total files
-        vbox_total_activities.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
-        vbox_journal_entries.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
-        vbox_total_contribs.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
-        hbox_heatmap.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
-       
+        vbox_total_activities.override_background_color(Gtk.StateFlags.NORMAL,
+                                                        Gdk.RGBA(1, 1, 1, 1))
+        vbox_journal_entries.override_background_color(Gtk.StateFlags.NORMAL,
+                                                       Gdk.RGBA(1, 1, 1, 1))
+        vbox_total_contribs.override_background_color(Gtk.StateFlags.NORMAL,
+                                                      Gdk.RGBA(1, 1, 1, 1))
+        hbox_heatmap.override_background_color(Gtk.StateFlags.NORMAL,
+                                               Gdk.RGBA(1, 1, 1, 1))
+
         vbox_tree = Gtk.VBox()
-        vbox_tree.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
+        vbox_tree.override_background_color(Gtk.StateFlags.NORMAL,
+                                            Gdk.RGBA(1, 1, 1, 1))
 
         vbox_pie = Gtk.VBox()
-        vbox_pie.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1))
+        vbox_pie.override_background_color(Gtk.StateFlags.NORMAL,
+                                           Gdk.RGBA(1, 1, 1, 1))
 
         label_dashboard = Gtk.Label()
         label_dashboard.set_markup(_("<b>Dashboard</b>"))
@@ -142,7 +148,7 @@ class DashboardActivity(activity.Activity):
         label_CE.set_markup(_("<b>Total Files</b>"))
         vbox_total_contribs.add(label_CE)
 
-         # label for pie
+        # label for pie
         label_PIE = Gtk.Label()
         label_PIE.set_markup(_("<b>Most used activities</b>"))
         vbox_pie.pack_start(label_PIE, False, True, 5)
@@ -165,7 +171,7 @@ class DashboardActivity(activity.Activity):
         reader = JournalReader()
         self._graph_from_reader(reader)
         self.current_chart = Chart("pie")
-        self.update_chart()     
+        self.update_chart()
 
         # font
         font_main = Pango.FontDescription("Granada 14")
@@ -182,14 +188,14 @@ class DashboardActivity(activity.Activity):
         # get total number of activities
         registry = bundleregistry.get_registry()
         dsobjects, journal_entries = datastore.find({})
-        
+
         mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
-                        'image/png', 'image/tiff', 'application/pdf',
-                        'text/plain', 'application/vnd.olpc-sugar',
-                        'application/rtf', 'text/rtf', 
-                        'application/epub+zip', 'text/html',
-                        'application/x-pdf']
-        
+                      'image/png', 'image/tiff', 'application/pdf',
+                      'text/plain', 'application/vnd.olpc-sugar',
+                      'application/rtf', 'text/rtf',
+                      'application/epub+zip', 'text/html',
+                      'application/x-pdf']
+
         self.treeview_list = []
         self.files_list = []
         self.old_list = []
@@ -221,26 +227,27 @@ class DashboardActivity(activity.Activity):
                 new2.append(dsobject.metadata['mtime'])
                 self.files_list.append(new2)
 
-            self.old_list = sorted(self.old_list, key=lambda x:x[6])
+            self.old_list = sorted(self.old_list, key=lambda x: x[6])
 
         # treeview for Journal entries
 
-        self.liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str, str)
+        self.liststore = Gtk.ListStore(str, str, str, object, str,
+                                       datastore.DSMetadata, str, str)
         self.treeview = Gtk.TreeView(self.liststore)
         self.treeview.set_headers_visible(False)
 
         for i, col_title in enumerate(["Recently Opened Activities"]):
-            
+
             renderer_title = Gtk.CellRendererText()
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
 
             column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
             column1.add_attribute(icon_renderer, 'file-name',
-                                    1)
+                                  1)
             column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
             column1.add_attribute(icon_renderer, 'xo-color',
-                                    3)
+                                  3)
             column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
             column3 = Gtk.TreeViewColumn(col_title, renderer_time, text=6)
 
@@ -270,7 +277,7 @@ class DashboardActivity(activity.Activity):
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_can_focus(False)
         scrolled_window.set_policy(Gtk.PolicyType.NEVER,
-                                         Gtk.PolicyType.AUTOMATIC)
+                                   Gtk.PolicyType.AUTOMATIC)
         scrolled_window.set_shadow_type(Gtk.ShadowType.NONE)
         scrolled_window.show()
 
@@ -282,11 +289,10 @@ class DashboardActivity(activity.Activity):
         vbox_tree.pack_start(hbox_tree2, False, False, 5)
         scrolled_window.add(self.treeview)
 
-        #label for recent activities
+        # label for recent activities
         label_rec = Gtk.Label(expand=False)
         label_rec.set_markup("<b>Recently Opened Activities</b>")
-        #hbox_tree.add(label_rec)
-        
+
         vbox_tree.add(scrolled_window)
 
         label_total_activities.set_text(str(len(registry)))
@@ -303,22 +309,23 @@ class DashboardActivity(activity.Activity):
         self.dates, self.dates_a = self._generate_dates()
         self._build_heatmap(grid_heatmap, self.dates, self.dates_a)
 
-        self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str, datastore.DSMetadata, str, str)
+        self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str,
+                                               datastore.DSMetadata, str, str)
         heatmap_treeview = Gtk.TreeView(self.heatmap_liststore)
         heatmap_treeview.set_headers_visible(False)
 
         for i, col_title in enumerate(["Activity"]):
-            
+
             renderer_title = Gtk.CellRendererText()
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
 
             column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
             column1.add_attribute(icon_renderer, 'file-name',
-                                    1)
+                                  1)
             column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
             column1.add_attribute(icon_renderer, 'xo-color',
-                                    3)
+                                  3)
             column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
             column3 = Gtk.TreeViewColumn(col_title, renderer_time, text=6)
 
@@ -333,12 +340,18 @@ class DashboardActivity(activity.Activity):
 
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
-        grid.attach_next_to(vbox_total_activities, label_dashboard, Gtk.PositionType.BOTTOM, 50, 35)
-        grid.attach_next_to(vbox_journal_entries, vbox_total_activities, Gtk.PositionType.RIGHT, 50, 35)
-        grid.attach_next_to(vbox_total_contribs, vbox_journal_entries, Gtk.PositionType.RIGHT, 50, 35)
-        grid.attach_next_to(vbox_tree, vbox_total_activities, Gtk.PositionType.BOTTOM, 75, 90)
-        grid.attach_next_to(vbox_pie, vbox_tree, Gtk.PositionType.RIGHT, 75, 90)
-        grid.attach_next_to(hbox_heatmap, vbox_tree, Gtk.PositionType.BOTTOM, 150, 75)
+        grid.attach_next_to(vbox_total_activities, label_dashboard,
+                            Gtk.PositionType.BOTTOM, 50, 35)
+        grid.attach_next_to(vbox_journal_entries, vbox_total_activities,
+                            Gtk.PositionType.RIGHT, 50, 35)
+        grid.attach_next_to(vbox_total_contribs, vbox_journal_entries,
+                            Gtk.PositionType.RIGHT, 50, 35)
+        grid.attach_next_to(vbox_tree, vbox_total_activities,
+                            Gtk.PositionType.BOTTOM, 75, 90)
+        grid.attach_next_to(vbox_pie, vbox_tree,
+                            Gtk.PositionType.RIGHT, 75, 90)
+        grid.attach_next_to(hbox_heatmap, vbox_tree,
+                            Gtk.PositionType.BOTTOM, 150, 75)
         grid.show_all()
 
     def _build_heatmap(self, grid, dates, dates_a):
@@ -349,62 +362,61 @@ class DashboardActivity(activity.Activity):
         week_list = [0, 5, 9, 13, 18, 22, 26, 31, 35, 39, 44, 49]
 
         for i in range(0, 365):
-            if (i%7 == 0):
+            if (i % 7 == 0):
                 j = j + 1
                 k = 0
             k = k + 1
-            count = 0 
+            count = 0
             for x in range(0, len(self.old_list)):
                 date = self.old_list[x][7][:-16]
                 if date == dates[i]:
-                        count = count + 1
+                    count = count + 1
             box = HeatMapBlock(dates_a[i], count, i)
             box.connect('on-clicked', self._on_clicked_cb)
             lab_days = Gtk.Label()
             lab_months = Gtk.Label()
 
             # for weekdays
-            if(k%2 == 0 and counter_days < 3):
+            if(k % 2 == 0 and counter_days < 3):
                 day = ''
-                if(counter_days==0):
+                if(counter_days == 0):
                     day = dates_a[8][:-13]
                     lab_days.set_text(_(day))
-                if(counter_days==1):
+                if(counter_days == 1):
                     day = dates_a[10][:-13]
                     lab_days.set_text(_(day))
-                if(counter_days==2):
+                if(counter_days == 2):
                     day = dates_a[12][:-13]
                     lab_days.set_text(_(day))
-                _logger.info(day)
 
                 grid.attach(lab_days, 0, k, 1, 1)
                 counter_days = counter_days + 1
-            
+
             # for months
-            if(k%4 == 0 and counter_weeks < 54):
-                if(counter_weeks==0):
+            if(k % 4 == 0 and counter_weeks < 54):
+                if(counter_weeks == 0):
                     lab_months.set_text(_("Jan"))
-                if(counter_weeks==5):
+                if(counter_weeks == 5):
                     lab_months.set_text(_("Feb"))
-                if(counter_weeks==9):
+                if(counter_weeks == 9):
                     lab_months.set_text(_("Mar"))
-                if(counter_weeks==13):
+                if(counter_weeks == 13):
                     lab_months.set_text(_("Apr"))
-                if(counter_weeks==18):
+                if(counter_weeks == 18):
                     lab_months.set_text(_("May"))
-                if(counter_weeks==22):
+                if(counter_weeks == 22):
                     lab_months.set_text(_("Jun"))
-                if(counter_weeks==26):
+                if(counter_weeks == 26):
                     lab_months.set_text(_("Jul"))
-                if(counter_weeks==31):
+                if(counter_weeks == 31):
                     lab_months.set_text(_("Aug"))
-                if(counter_weeks==35):
+                if(counter_weeks == 35):
                     lab_months.set_text(_("Sep"))
-                if(counter_weeks==39):
+                if(counter_weeks == 39):
                     lab_months.set_text(_("Oct"))
-                if(counter_weeks==44):
+                if(counter_weeks == 44):
                     lab_months.set_text(_("Nov"))
-                if(counter_weeks==49):
+                if(counter_weeks == 49):
                     lab_months.set_text(_("Dec"))
 
                 if counter_weeks in week_list:
@@ -415,16 +427,14 @@ class DashboardActivity(activity.Activity):
             grid.attach(box, j, k, 1, 1)
 
     def _on_clicked_cb(self, i, index):
-        _logger.info(str(index))
         self.heatmap_liststore.clear()
         del self.heatmap_list[:]
-        
+
         for y in range(0, len(self.old_list)):
             date = self.old_list[y][7][:-16]
             if date == self.dates[index]:
                 self.heatmap_list.append(self.old_list[y])
-                _logger.info(self.heatmap_list[0][0])
-    
+
         for item in self.heatmap_list:
             self.heatmap_liststore.append(item)
 
@@ -462,8 +472,6 @@ class DashboardActivity(activity.Activity):
 
     def _item_select_cb(self, selection):
         model, row = selection.get_selected()
-        registry = bundleregistry.get_registry()
-        bundle = registry.get_bundle(model[row][1])
 
         if row is not None:
             metadata = model[row][5]
@@ -479,7 +487,6 @@ class DashboardActivity(activity.Activity):
         try:
             # Resize the chart for all the screen sizes
             alloc = self.get_allocation()
-            #alloc = self.charts_area.get_allocation()
 
             new_width = alloc.width - 520
             new_height = alloc.height - 520
@@ -507,18 +514,17 @@ class DashboardActivity(activity.Activity):
         self.chart_data = []
 
         chart_data = reader.get_chart_data()
-        horizontal, vertical = reader.get_labels_name()
 
         # Load the data
-        for row  in chart_data:
-            self._add_value(None, 
-                                label=row[0], value=float(row[1]))
+        for row in chart_data:
+            self._add_value(None,
+                            label=row[0], value=float(row[1]))
 
             self.update_chart()
 
     def _add_value(self, widget, label="", value="0.0"):
         data = (label, float(value))
-        if not data in self.chart_data:
+        if data not in self.chart_data:
             pos = self.labels_and_values.add_value(label, value)
             self.chart_data.insert(pos, data)
             self._update_chart_data()
@@ -526,7 +532,6 @@ class DashboardActivity(activity.Activity):
     def update_chart(self):
         if self.current_chart:
             self.current_chart.data_set(self.chart_data)
-            #self.current_chart.set_title(self.metadata["title"])
             self.current_chart.set_x_label(self.x_label)
             self.current_chart.set_y_label(self.y_label)
             self._render_chart()
@@ -562,7 +567,8 @@ class ChartArea(Gtk.DrawingArea):
         """A class for Draw the chart"""
         super(ChartArea, self).__init__()
         self._parent = parent
-        self.add_events(Gdk.EventMask.EXPOSURE_MASK | Gdk.EventMask.VISIBILITY_NOTIFY_MASK)
+        self.add_events(Gdk.EventMask.EXPOSURE_MASK |
+                        Gdk.EventMask.VISIBILITY_NOTIFY_MASK)
         self.connect("draw", self._draw_cb)
 
     def _draw_cb(self, widget, context):
@@ -589,13 +595,14 @@ class ChartArea(Gtk.DrawingArea):
 class ChartData(Gtk.TreeView):
 
     __gsignals__ = {
-             'label-changed': (GObject.SignalFlags.RUN_FIRST, None, [str, str], ),
-             'value-changed': (GObject.SignalFlags.RUN_FIRST, None, [str, str], ), }
+             'label-changed': (GObject.SignalFlags.RUN_FIRST, None,
+                               [str, str], ),
+             'value-changed': (GObject.SignalFlags.RUN_FIRST, None,
+                               [str, str], ), }
 
     def __init__(self, activity):
 
         GObject.GObject.__init__(self)
-
 
         self.model = Gtk.ListStore(str, str)
         self.set_model(self.model)
@@ -604,7 +611,6 @@ class ChartData(Gtk.TreeView):
         self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
         # Label column
-
         column = Gtk.TreeViewColumn(_("Label"))
         label = Gtk.CellRendererText()
         label.set_property('editable', True)
@@ -641,7 +647,6 @@ class ChartData(Gtk.TreeView):
         except ValueError:
             _iter = self.model.append([label, str(value)])
 
-
         self.set_cursor(self.model.get_path(_iter),
                         self.get_column(1),
                         True)
@@ -649,14 +654,6 @@ class ChartData(Gtk.TreeView):
         _logger.info("Added: %s, Value: %s" % (label, value))
 
         return path
-
-    def remove_selected_value(self):
-        model, iter = self._selection.get_selected()
-        value = (self.model.get(iter, 0)[0], float(self.model.get(iter, 1)[0]))
-        _logger.info('VALUE: ' + str(value))
-        self.model.remove(iter)
-
-        return value
 
     def _label_changed(self, cell, path, new_text, model):
         _logger.info("Change '%s' to '%s'" % (model[path][0], new_text))
@@ -681,22 +678,8 @@ class ChartData(Gtk.TreeView):
             self.emit("value-changed", str(path), number)
 
         elif not is_number:
-            alert = Alert()
+            _logger.info("Must be a valid value (int)")
 
-            alert.props.title = _('Invalid Value')
-            alert.props.msg = \
-                           _('The value must be a number (integer or decimal)')
-
-            ok_icon = Icon(icon_name='dialog-ok')
-            alert.add_button(Gtk.ResponseType.OK, _('Ok'), ok_icon)
-            ok_icon.show()
-
-            alert.connect('response', lambda a, r: activity.remove_alert(a))
-
-            activity.add_alert(alert)
-
-            alert.show()
-            
 
 class CellRendererActivityIcon(CellRendererIcon):
     __gtype_name__ = 'JournalCellRendererActivityIcon'
@@ -709,11 +692,12 @@ class CellRendererActivityIcon(CellRendererIcon):
         self.props.size = style.STANDARD_ICON_SIZE
         self.props.mode = Gtk.CellRendererMode.ACTIVATABLE
 
+
 class HeatMapBlock(Gtk.EventBox):
 
     __gsignals__ = {
         'on-clicked': (GObject.SignalFlags.RUN_FIRST, None,
-                            (int,)),
+                       (int,)),
     }
 
     def __init__(self, date, contribs, index):
@@ -728,11 +712,11 @@ class HeatMapBlock(Gtk.EventBox):
         if contribs == 0:
             self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#cdcfd3"))
         elif contribs <= 2 and contribs > 0:
-            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#98abd1"))
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#5fce68"))
         elif contribs <= 5 and contribs > 2:
-            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#7996d1"))
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#47a94f"))
         elif contribs >= 6:
-            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#507bd3"))
+            self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#38853e"))
 
         self.add(label)
         self.set_events(Gdk.EventType.BUTTON_PRESS)
@@ -740,4 +724,3 @@ class HeatMapBlock(Gtk.EventBox):
 
     def _on_mouse(self, widget, event):
         self.emit('on-clicked', self.i)
-        
