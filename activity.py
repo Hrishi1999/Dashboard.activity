@@ -120,9 +120,9 @@ class DashboardActivity(activity.Activity):
         vbox_tree.override_background_color(Gtk.StateFlags.NORMAL,
                                             Gdk.RGBA(1, 1, 1, 1))
 
-        vbox_pie = Gtk.VBox()
-        vbox_pie.override_background_color(Gtk.StateFlags.NORMAL,
-                                           Gdk.RGBA(1, 1, 1, 1))
+        self.vbox_pie = Gtk.VBox()
+        self.vbox_pie.override_background_color(Gtk.StateFlags.NORMAL,
+                                                Gdk.RGBA(1, 1, 1, 1))
 
         label_dashboard = Gtk.Label()
         label_dashboard.set_markup(_("<b>Dashboard</b>"))
@@ -151,7 +151,7 @@ class DashboardActivity(activity.Activity):
         # label for pie
         label_PIE = Gtk.Label()
         label_PIE.set_markup(_("<b>Most used activities</b>"))
-        vbox_pie.pack_start(label_PIE, False, True, 5)
+        self.vbox_pie.pack_start(label_PIE, False, True, 5)
 
         label_contribs = Gtk.Label()
         vbox_total_contribs.add(label_contribs)
@@ -166,7 +166,7 @@ class DashboardActivity(activity.Activity):
         self.charts_area.connect('size_allocate', self._chart_size_allocate)
         eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
         eventbox.add(self.charts_area)
-        vbox_pie.pack_start(eventbox, True, True, 0)
+        self.vbox_pie.pack_start(eventbox, True, True, 0)
 
         reader = JournalReader()
         self._graph_from_reader(reader)
@@ -348,7 +348,7 @@ class DashboardActivity(activity.Activity):
                             Gtk.PositionType.RIGHT, 50, 35)
         grid.attach_next_to(vbox_tree, vbox_total_activities,
                             Gtk.PositionType.BOTTOM, 75, 90)
-        grid.attach_next_to(vbox_pie, vbox_tree,
+        grid.attach_next_to(self.vbox_pie, vbox_tree,
                             Gtk.PositionType.RIGHT, 75, 90)
         grid.attach_next_to(hbox_heatmap, vbox_tree,
                             Gtk.PositionType.BOTTOM, 150, 75)
@@ -486,10 +486,9 @@ class DashboardActivity(activity.Activity):
             return
         try:
             # Resize the chart for all the screen sizes
-            alloc = self.get_allocation()
-
-            new_width = alloc.width - 520
-            new_height = alloc.height - 520
+            alloc = self.vbox_pie.get_allocation()
+            new_width = alloc.width
+            new_height = alloc.height
 
             self.current_chart.width = new_width
             self.current_chart.height = new_height
