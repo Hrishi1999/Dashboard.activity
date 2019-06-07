@@ -191,7 +191,7 @@ class DashboardActivity(activity.Activity):
 
         mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
                       'image/png', 'image/tiff', 'application/pdf',
-                      'text/plain', 'application/vnd.olpc-sugar',
+                      'application/vnd.olpc-sugar',
                       'application/rtf', 'text/rtf',
                       'application/epub+zip', 'text/html',
                       'application/x-pdf']
@@ -227,7 +227,7 @@ class DashboardActivity(activity.Activity):
                 new2.append(dsobject.metadata['mtime'])
                 self.files_list.append(new2)
 
-            self.old_list = sorted(self.old_list, key=lambda x: x[6])
+            self.old_list = sorted(self.old_list, key=lambda x: x[7])
 
         # treeview for Journal entries
 
