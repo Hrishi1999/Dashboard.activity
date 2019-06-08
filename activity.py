@@ -84,10 +84,10 @@ class DashboardActivity(activity.Activity):
         self.set_toolbar_box(toolbar_box)
         toolbar_box.show()
 
-        # Frane as the main container
+        # ScrolledWindow as the main container
         scrolled_window_main = Gtk.ScrolledWindow()
         scrolled_window_main.set_can_focus(False)
-        scrolled_window_main.set_policy(Gtk.PolicyType.NEVER,
+        scrolled_window_main.set_policy(Gtk.PolicyType.AUTOMATIC,
                                         Gtk.PolicyType.AUTOMATIC)
         scrolled_window_main.set_shadow_type(Gtk.ShadowType.NONE)
         scrolled_window_main.show()
@@ -242,6 +242,9 @@ class DashboardActivity(activity.Activity):
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
 
+            renderer_title.set_property('ellipsize', Pango.EllipsizeMode.END)
+            renderer_title.set_property('ellipsize-set', True)
+
             column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
             column1.add_attribute(icon_renderer, 'file-name',
                                   1)
@@ -249,8 +252,10 @@ class DashboardActivity(activity.Activity):
             column1.add_attribute(icon_renderer, 'xo-color',
                                   3)
             column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
+            column2.set_min_width(200)
             column3 = Gtk.TreeViewColumn(col_title, renderer_time, text=6)
 
+            self.treeview.set_tooltip_column(0)
             self.treeview.append_column(column1)
             self.treeview.append_column(column2)
             self.treeview.append_column(column3)
