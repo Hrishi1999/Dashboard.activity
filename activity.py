@@ -125,11 +125,13 @@ class DashboardActivity(activity.Activity):
                                                 Gdk.RGBA(1, 1, 1, 1))
 
         label_dashboard = Gtk.Label()
-        label_dashboard.set_markup(_("<b>Dashboard</b>"))
+        text_dashboard = "<b>{0}</b>".format(_("Dashboard"))
+        label_dashboard.set_markup(text_dashboard)
 
         # label for total activities
         label_TA = Gtk.Label()
-        label_TA.set_markup(_("<b>Activities Installed</b>"))
+        text_TA = "<b>{0}</b>".format(_("Activities Installed"))
+        label_TA.set_markup(text_TA)
         vbox_total_activities.add(label_TA)
 
         label_total_activities = Gtk.Label()
@@ -137,7 +139,8 @@ class DashboardActivity(activity.Activity):
 
         # label for total journal entries
         label_JE = Gtk.Label()
-        label_JE.set_markup(_("<b>Journal Entries</b>"))
+        text_JE = "<b>{0}</b>".format(_("Journal Entries"))
+        label_JE.set_markup(text_JE)
         vbox_journal_entries.add(label_JE)
 
         label_journal_entries = Gtk.Label()
@@ -145,12 +148,14 @@ class DashboardActivity(activity.Activity):
 
         # label for files
         label_CE = Gtk.Label()
-        label_CE.set_markup(_("<b>Total Files</b>"))
+        text_CE = "<b>{0}</b>".format(_("Total Files"))
+        label_CE.set_markup(text_CE)
         vbox_total_contribs.add(label_CE)
 
         # label for pie
         label_PIE = Gtk.Label()
-        label_PIE.set_markup(_("<b>Most used activities</b>"))
+        text_PIE = "<b>{0}</b>".format(_("Most used activities"))
+        label_PIE.set_markup(text_PIE)
         self.vbox_pie.pack_start(label_PIE, False, True, 5)
 
         label_contribs = Gtk.Label()
@@ -230,7 +235,6 @@ class DashboardActivity(activity.Activity):
             self.old_list = sorted(self.old_list, key=lambda x: x[7])
 
         # treeview for Journal entries
-
         self.liststore = Gtk.ListStore(str, str, str, object, str,
                                        datastore.DSMetadata, str, str)
         self.treeview = Gtk.TreeView(self.liststore)
@@ -287,7 +291,8 @@ class DashboardActivity(activity.Activity):
         scrolled_window.show()
 
         hbox_tree2 = Gtk.HBox()
-        self.label_treeview = Gtk.Label(_("  Journal Entries  "))
+        text_treeview = " {0} ".format(_("Journal Entries"))
+        self.label_treeview = Gtk.Label(text_treeview)
         hbox_tree2.pack_start(self.label_treeview, False, True, 0)
         hbox_tree2.pack_start(combobox, True, True, 0)
 
@@ -296,7 +301,8 @@ class DashboardActivity(activity.Activity):
 
         # label for recent activities
         label_rec = Gtk.Label(expand=False)
-        label_rec.set_markup("<b>Recently Opened Activities</b>")
+        text_treeview = "{0}".format(_("Recently Opened Activities"))
+        label_rec.set_markup(text_treeview)
 
         vbox_tree.add(scrolled_window)
 

@@ -1,0 +1,146 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-06-09 16:28+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: activity/activity.info:2 activity.py:128
+msgid "Dashboard"
+msgstr ""
+
+#: activity.py:133
+msgid "Activities Installed"
+msgstr ""
+
+#: activity.py:142 activity.py:294
+msgid "Journal Entries"
+msgstr ""
+
+#: activity.py:151
+msgid "Total Files"
+msgstr ""
+
+#: activity.py:157
+msgid "Most used activities"
+msgstr ""
+
+#: activity.py:304
+msgid "Recently Opened Activities"
+msgstr ""
+
+#: activity.py:314
+msgid "User Activity"
+msgstr ""
+
+#: activity.py:409
+msgid "Jan"
+msgstr ""
+
+#: activity.py:411
+msgid "Feb"
+msgstr ""
+
+#: activity.py:413
+msgid "Mar"
+msgstr ""
+
+#: activity.py:415
+msgid "Apr"
+msgstr ""
+
+#: activity.py:417
+msgid "May"
+msgstr ""
+
+#: activity.py:419
+msgid "Jun"
+msgstr ""
+
+#: activity.py:421
+msgid "Jul"
+msgstr ""
+
+#: activity.py:423
+msgid "Aug"
+msgstr ""
+
+#: activity.py:425
+msgid "Sep"
+msgstr ""
+
+#: activity.py:427
+msgid "Oct"
+msgstr ""
+
+#: activity.py:429
+msgid "Nov"
+msgstr ""
+
+#: activity.py:431
+msgid "Dec"
+msgstr ""
+
+#: activity.py:624
+msgid "Label"
+msgstr ""
+
+#: activity.py:635
+msgid "Value"
+msgstr ""
+
+#: readers.py:41
+msgid "Free space"
+msgstr ""
+
+#: readers.py:42
+msgid "Used space"
+msgstr ""
+
+#: readers.py:143
+msgid "turtle"
+msgstr ""
+
+#: readers.py:143
+msgid "pen"
+msgstr ""
+
+#: readers.py:143
+msgid "number"
+msgstr ""
+
+#: readers.py:143
+msgid "flow"
+msgstr ""
+
+#: readers.py:143
+msgid "box"
+msgstr ""
+
+#: readers.py:144
+msgid "sensor"
+msgstr ""
+
+#: readers.py:144
+msgid "media"
+msgstr ""
+
+#: readers.py:144
+msgid "extras"
+msgstr ""
+
+#: readers.py:269
+msgid "other"
+msgstr ""
