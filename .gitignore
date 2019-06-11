@@ -3,3 +3,4 @@
 *.pyo
 dist/
 locale/
+.vscode

@@ -17,9 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
 import os
 
 from sugar3 import profile
@@ -30,17 +27,17 @@ def rgb2html(color):
     """Returns a html string from a Gdk color"""
     red = "%x" % int(color.red / 65535.0 * 255)
     if len(red) == 1:
-            red = "0%s" % red
+        red = "0%s" % red
 
     green = "%x" % int(color.green / 65535.0 * 255)
 
     if len(green) == 1:
-            green = "0%s" % green
+        green = "0%s" % green
 
     blue = "%x" % int(color.blue / 65535.0 * 255)
 
     if len(blue) == 1:
-            blue = "0%s" % blue
+        blue = "0%s" % blue
 
     new_color = "#%s%s%s" % (red, green, blue)
 

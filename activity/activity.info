@@ -1,8 +1,9 @@
 [Activity]
 name = Dashboard
+summary = A Dashboard for users showing different stats
 activity_version = 1
 bundle_id = org.sugarlabs.Dashboard
 exec = sugar-activity activity.DashboardActivity
 icon = activity-dashboard
-license = GPLv2+
-repository = https://github.com/sugarlabs/hello-world-fork.git
+license = GPLv3+
+repository = https://github.com/Hrishi1999/Dashboard.activity

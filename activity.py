@@ -1,5 +1,4 @@
-# Copyright 2019 Hrishi Patel
-#
+# Copyright (C) 2019 Hrishi Patel
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -18,6 +17,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
 from gi.repository import Gtk, Gdk, Pango, GObject
 import logging
 
@@ -163,12 +163,12 @@ class DashboardActivity(activity.Activity):
 
         # pie chart
         self.labels_and_values = ChartData(self)
-        self.labels_and_values.connect("label-changed", self._label_changed)
-        self.labels_and_values.connect("value-changed", self._value_changed)
+        self.labels_and_values.connect("label-changed", self._label_changed_cb)
+        self.labels_and_values.connect("value-changed", self._value_changed_cb)
 
         eventbox = Gtk.EventBox()
         self.charts_area = ChartArea(self)
-        self.charts_area.connect('size_allocate', self._chart_size_allocate)
+        self.charts_area.connect('size_allocate', self._chart_size_allocate_cb)
         eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
         eventbox.add(self.charts_area)
         self.vbox_pie.pack_start(eventbox, True, True, 0)
@@ -272,7 +272,7 @@ class DashboardActivity(activity.Activity):
             cbox_store.append([item])
 
         combobox = Gtk.ComboBox.new_with_model(cbox_store)
-        combobox.connect("changed", self._on_name_combo_changed)
+        combobox.connect("changed", self._on_name_combo_changed_cb)
         renderer_text = Gtk.CellRendererText()
         combobox.pack_start(renderer_text, True)
         combobox.add_attribute(renderer_text, "text", 0)
@@ -469,7 +469,7 @@ class DashboardActivity(activity.Activity):
         for item in tlist:
             self.liststore.append(item)
 
-    def _on_name_combo_changed(self, combo):
+    def _on_name_combo_changed_cb(self, combo):
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
             model = combo.get_model()
@@ -489,7 +489,7 @@ class DashboardActivity(activity.Activity):
             bundle_id = metadata.get('activity', '')
             launch_bundle(bundle_id, model[row][4])
 
-    def _chart_size_allocate(self, widget, allocation):
+    def _chart_size_allocate_cb(self, widget, allocation):
         self._render_chart()
 
     def _render_chart(self):
@@ -560,12 +560,12 @@ class DashboardActivity(activity.Activity):
         self.current_chart.set_y_label(self.y_label)
         self._render_chart()
 
-    def _value_changed(self, treeview, path, new_value):
+    def _value_changed_cb(self, treeview, path, new_value):
         path = int(path)
         self.chart_data[path] = (self.chart_data[path][0], float(new_value))
         self._update_chart_data()
 
-    def _label_changed(self, treeview, path, new_label):
+    def _label_changed_cb(self, treeview, path, new_label):
         path = int(path)
         self.chart_data[path] = (new_label, self.chart_data[path][1])
         self._update_chart_data()
@@ -604,11 +604,10 @@ class ChartArea(Gtk.DrawingArea):
 
 class ChartData(Gtk.TreeView):
 
-    __gsignals__ = {
-             'label-changed': (GObject.SignalFlags.RUN_FIRST, None,
-                               [str, str], ),
-             'value-changed': (GObject.SignalFlags.RUN_FIRST, None,
-                               [str, str], ), }
+    __gsignals__ = {'label-changed': (GObject.SignalFlags.RUN_FIRST, None,
+                                      [str, str], ),
+                    'value-changed': (GObject.SignalFlags.RUN_FIRST, None,
+                                      [str, str], ), }
 
     def __init__(self, activity):
 
@@ -624,18 +623,17 @@ class ChartData(Gtk.TreeView):
         column = Gtk.TreeViewColumn(_("Label"))
         label = Gtk.CellRendererText()
         label.set_property('editable', True)
-        label.connect("edited", self._label_changed, self.model)
+        label.connect("edited", self._label_changed_cb, self.model)
 
         column.pack_start(label, True)
         column.add_attribute(label, 'text', 0)
         self.append_column(column)
 
         # Value column
-
         column = Gtk.TreeViewColumn(_("Value"))
         value = Gtk.CellRendererText()
         value.set_property('editable', True)
-        value.connect("edited", self._value_changed, self.model, activity)
+        value.connect("edited", self._value_changed_cb, self.model, activity)
 
         column.pack_start(value, True)
         column.add_attribute(value, 'text', 1)
@@ -665,13 +663,13 @@ class ChartData(Gtk.TreeView):
 
         return path
 
-    def _label_changed(self, cell, path, new_text, model):
+    def _label_changed_cb(self, cell, path, new_text, model):
         _logger.info("Change '%s' to '%s'" % (model[path][0], new_text))
         model[path][0] = new_text
 
         self.emit("label-changed", str(path), new_text)
 
-    def _value_changed(self, cell, path, new_text, model, activity):
+    def _value_changed_cb(self, cell, path, new_text, model, activity):
         _logger.info("Change '%s' to '%s'" % (model[path][1], new_text))
         is_number = True
         number = new_text.replace(",", ".")
@@ -730,7 +728,7 @@ class HeatMapBlock(Gtk.EventBox):
 
         self.add(label)
         self.set_events(Gdk.EventType.BUTTON_PRESS)
-        self.connect('button-press-event', self._on_mouse)
+        self.connect('button-press-event', self._on_mouse_cb)
 
-    def _on_mouse(self, widget, event):
+    def _on_mouse_cb(self, widget, event):
         self.emit('on-clicked', self.i)
