@@ -28,13 +28,13 @@ def clamp(minValue, maxValue, value):
 
 def safe_unicode(obj, encoding=None):
     """Return a unicode value from the argument"""
-    if isinstance(obj, unicode):
+    if isinstance(obj, str):
         return obj
     elif isinstance(obj, str):
         if encoding is None:
-            return unicode(obj)
+            return str(obj)
         else:
-            return unicode(obj, encoding)
+            return str(obj, encoding)
     else:
         # it may be an int or a float
-        return unicode(obj)
+        return str(obj)

@@ -126,7 +126,6 @@ class ColorSchemeMetaclass(type):
 class ColorScheme(dict):
     """A color scheme is a dictionary where the keys match the keys
     constructor argument and the values are colors"""
-
     __metaclass__ = ColorSchemeMetaclass
     __registry__ = {}
 

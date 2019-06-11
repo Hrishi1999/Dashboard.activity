@@ -239,7 +239,7 @@ class ParseJournal():
                             self._dsdict[os.path.basename(path)][-1][
                                 'activity'] = activity
 
-        for k, v in self._dsdict.iteritems():
+        for k, v in list(self._dsdict.items()):
             for a in v:
                 if 'activity' in a:
                     if a['activity'] in self._activity_name:
