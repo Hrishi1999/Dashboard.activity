@@ -651,7 +651,7 @@ class ChartData(Gtk.TreeView):
         elif selected:
             path = int(str(self.model.get_path(selected))) + 1
         try:
-            _iter = self.model.insert(path, [label, value])
+            _iter = self.model.insert(path, [label, str(value)])
         except ValueError:
             _iter = self.model.append([label, str(value)])
 
