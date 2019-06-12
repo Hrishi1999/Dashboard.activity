@@ -13,8 +13,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-# noqa: E402
-
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
@@ -101,28 +99,41 @@ class DashboardActivity(activity.Activity):
         grid.set_halign(Gtk.Align.CENTER)
         frame.add(grid)
 
+        # VBoxes for total activities, journal entries and total files
         vbox_total_activities = Gtk.VBox()
         vbox_journal_entries = Gtk.VBox()
         vbox_total_contribs = Gtk.VBox()
+        vbox_tree = Gtk.VBox()
+        self.vbox_pie = Gtk.VBox()
         hbox_heatmap = Gtk.VBox()
 
-        # VBoxes for total activities, journal entries and total files
-        vbox_total_activities.override_background_color(Gtk.StateFlags.NORMAL,
-                                                        Gdk.RGBA(1, 1, 1, 1))
-        vbox_journal_entries.override_background_color(Gtk.StateFlags.NORMAL,
-                                                       Gdk.RGBA(1, 1, 1, 1))
-        vbox_total_contribs.override_background_color(Gtk.StateFlags.NORMAL,
-                                                      Gdk.RGBA(1, 1, 1, 1))
-        hbox_heatmap.override_background_color(Gtk.StateFlags.NORMAL,
-                                               Gdk.RGBA(1, 1, 1, 1))
+        eb_total_activities = Gtk.EventBox()
+        eb_journal_entries = Gtk.EventBox()
+        eb_total_contribs = Gtk.EventBox()
+        eb_heatmap = Gtk.EventBox()
+        eb_tree = Gtk.EventBox()
+        eb_pie = Gtk.EventBox()
 
-        vbox_tree = Gtk.VBox()
-        vbox_tree.override_background_color(Gtk.StateFlags.NORMAL,
-                                            Gdk.RGBA(1, 1, 1, 1))
+        eb_total_activities.add(vbox_total_activities)
+        eb_journal_entries.add(vbox_journal_entries)
+        eb_total_contribs.add(vbox_total_contribs)
+        eb_heatmap.add(hbox_heatmap)
+        eb_pie.add(self.vbox_pie)
+        eb_tree.add(vbox_tree)
 
-        self.vbox_pie = Gtk.VBox()
-        self.vbox_pie.override_background_color(Gtk.StateFlags.NORMAL,
-                                                Gdk.RGBA(1, 1, 1, 1))
+        # change eventbox color
+        eb_total_activities.modify_bg(Gtk.StateType.NORMAL,
+                                      Gdk.color_parse("#ffffff"))
+        eb_journal_entries.modify_bg(Gtk.StateType.NORMAL,
+                                     Gdk.color_parse("#ffffff"))
+        eb_total_contribs.modify_bg(Gtk.StateType.NORMAL,
+                                    Gdk.color_parse("#ffffff"))
+        eb_heatmap.modify_bg(Gtk.StateType.NORMAL,
+                             Gdk.color_parse("#ffffff"))
+        eb_pie.modify_bg(Gtk.StateType.NORMAL,
+                         Gdk.color_parse("#ffffff"))
+        eb_tree.modify_bg(Gtk.StateType.NORMAL,
+                          Gdk.color_parse("#ffffff"))
 
         label_dashboard = Gtk.Label()
         text_dashboard = "<b>{0}</b>".format(_("Dashboard"))
@@ -351,17 +362,17 @@ class DashboardActivity(activity.Activity):
 
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
-        grid.attach_next_to(vbox_total_activities, label_dashboard,
+        grid.attach_next_to(eb_total_activities, label_dashboard,
                             Gtk.PositionType.BOTTOM, 50, 35)
-        grid.attach_next_to(vbox_journal_entries, vbox_total_activities,
+        grid.attach_next_to(eb_journal_entries, eb_total_activities,
                             Gtk.PositionType.RIGHT, 50, 35)
-        grid.attach_next_to(vbox_total_contribs, vbox_journal_entries,
+        grid.attach_next_to(eb_total_contribs, eb_journal_entries,
                             Gtk.PositionType.RIGHT, 50, 35)
-        grid.attach_next_to(vbox_tree, vbox_total_activities,
+        grid.attach_next_to(eb_tree, eb_total_activities,
                             Gtk.PositionType.BOTTOM, 75, 90)
-        grid.attach_next_to(self.vbox_pie, vbox_tree,
+        grid.attach_next_to(eb_pie, eb_tree,
                             Gtk.PositionType.RIGHT, 75, 90)
-        grid.attach_next_to(hbox_heatmap, vbox_tree,
+        grid.attach_next_to(eb_heatmap, eb_tree,
                             Gtk.PositionType.BOTTOM, 150, 75)
         grid.show_all()
 
@@ -461,6 +472,7 @@ class DashboardActivity(activity.Activity):
         while dt < end:
             result_a.append(dt.strftime('%a, %b %d %Y'))
             result.append(dt.strftime('%Y-%m-%d'))
+            _logger.info(dt.strftime("%W"))
             dt += step
         return result, result_a
 
@@ -711,11 +723,11 @@ class HeatMapBlock(Gtk.EventBox):
     def __init__(self, date, contribs, index):
         Gtk.EventBox.__init__(self)
 
-        label = Gtk.Label("   ")
-        tooltip = date + "\nContributions:" + str(contribs)
-        label.set_tooltip_text(tooltip)
+        self._i = index
 
-        self.i = index
+        label = Gtk.Label("   ")
+        tooltip = date + "\nContributions: " + str(contribs)
+        label.set_tooltip_text(tooltip)
 
         if contribs == 0:
             self.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("#cdcfd3"))
@@ -731,4 +743,4 @@ class HeatMapBlock(Gtk.EventBox):
         self.connect('button-press-event', self._on_mouse_cb)
 
     def _on_mouse_cb(self, widget, event):
-        self.emit('on-clicked', self.i)
+        self.emit('on-clicked', self._i)
