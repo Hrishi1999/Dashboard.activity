@@ -507,19 +507,20 @@ class DashboardActivity(activity.Activity):
     def _render_chart(self):
         if self.current_chart is None or self.charts_area is None:
             return
+
+        # Resize the chart for all the screen sizes
+        alloc = self.vbox_pie.get_allocation()
+        new_width = alloc.width
+        new_height = alloc.height
+
+        self.current_chart.width = new_width
+        self.current_chart.height = new_height
+
+        # Set options
+        self.current_chart.set_color_scheme(color=self.chart_color)
+        self.current_chart.set_line_color(self.chart_line_color)
+
         try:
-            # Resize the chart for all the screen sizes
-            alloc = self.vbox_pie.get_allocation()
-            new_width = alloc.width
-            new_height = alloc.height
-
-            self.current_chart.width = new_width
-            self.current_chart.height = new_height
-
-            # Set options
-            self.current_chart.set_color_scheme(color=self.chart_color)
-            self.current_chart.set_line_color(self.chart_line_color)
-
             if self.current_chart.type == "pie":
                 self.current_chart.render(self)
             else:

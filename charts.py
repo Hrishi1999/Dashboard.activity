@@ -57,7 +57,7 @@ class Chart(GObject.GObject):
                 'lineColor': '#b3b3b3',
                 'x': {
                     'ticks': [dict(v=i, label=l[0]) for i,
-                                                        l in enumerate(data)],
+                              l in enumerate(data)],
                     'label': 'X',
                 },
                 'y': {
@@ -108,8 +108,8 @@ class Chart(GObject.GObject):
         """Draw the chart
            Use the self.surface variable for show the chart"""
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                            self.width,
-                                            self.height)
+                                          self.width,
+                                          self.height)
 
         if self.type == "vbar":
             chart = sugarpycha.bar.VerticalBarChart(self.surface, self.options)
