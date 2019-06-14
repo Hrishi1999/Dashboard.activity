@@ -328,8 +328,8 @@ class DashboardActivity(activity.Activity):
         hbox_heatmap.pack_start(label_heatmap, False, True, 5)
         hbox_heatmap.pack_start(grid_heatmap, False, True, 5)
 
-        self.dates, self.dates_a = self._generate_dates()
-        self._build_heatmap(grid_heatmap, self.dates, self.dates_a)
+        self.dates, self.dates_a, months = self._generate_dates()
+        self._build_heatmap(grid_heatmap, self.dates, self.dates_a, months)
 
         self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str,
                                                datastore.DSMetadata, str, str)
@@ -376,12 +376,17 @@ class DashboardActivity(activity.Activity):
                             Gtk.PositionType.BOTTOM, 150, 75)
         grid.show_all()
 
-    def _build_heatmap(self, grid, dates, dates_a):
+    def _build_heatmap(self, grid, dates, dates_a, months):
         j = 1
         k = 1
         counter_days = 0
         counter_weeks = 0
         week_list = [0, 5, 9, 13, 18, 22, 26, 31, 35, 39, 44, 49]
+        months_dict = {}
+
+        # populate dictionary
+        for i, item in enumerate(week_list):
+            months_dict[item] = months[i]
 
         for i in range(0, 365):
             if (i % 7 == 0):
@@ -416,30 +421,9 @@ class DashboardActivity(activity.Activity):
 
             # for months
             if(k % 4 == 0 and counter_weeks < 54):
-                if(counter_weeks == 0):
-                    lab_months.set_text(_("Jan"))
-                if(counter_weeks == 5):
-                    lab_months.set_text(_("Feb"))
-                if(counter_weeks == 9):
-                    lab_months.set_text(_("Mar"))
-                if(counter_weeks == 13):
-                    lab_months.set_text(_("Apr"))
-                if(counter_weeks == 18):
-                    lab_months.set_text(_("May"))
-                if(counter_weeks == 22):
-                    lab_months.set_text(_("Jun"))
-                if(counter_weeks == 26):
-                    lab_months.set_text(_("Jul"))
-                if(counter_weeks == 31):
-                    lab_months.set_text(_("Aug"))
-                if(counter_weeks == 35):
-                    lab_months.set_text(_("Sep"))
-                if(counter_weeks == 39):
-                    lab_months.set_text(_("Oct"))
-                if(counter_weeks == 44):
-                    lab_months.set_text(_("Nov"))
-                if(counter_weeks == 49):
-                    lab_months.set_text(_("Dec"))
+                for key, value in months_dict.items():
+                    if counter_weeks == key:
+                        lab_months.set_text(str(value))
 
                 if counter_weeks in week_list:
                     grid.attach(lab_months, j, 0, 2, 1)
@@ -469,12 +453,19 @@ class DashboardActivity(activity.Activity):
 
         result = []
         result_a = []
+        months = []
+
         while dt < end:
             result_a.append(dt.strftime('%a, %b %d %Y'))
             result.append(dt.strftime('%Y-%m-%d'))
-            _logger.info(dt.strftime("%W"))
             dt += step
-        return result, result_a
+
+        for i in range(1, 13):
+            month_abre = datetime.date(year, i, 1).strftime('%b')
+            months.append(month_abre)
+            _logger.info(str(month_abre))
+
+        return result, result_a, months
 
     def _add_to_treeview(self, tlist):
         self.liststore.clear()
