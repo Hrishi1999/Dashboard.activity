@@ -105,7 +105,7 @@ class DashboardActivity(activity.Activity):
         vbox_total_contribs = Gtk.VBox()
         vbox_tree = Gtk.VBox()
         self.vbox_pie = Gtk.VBox()
-        hbox_heatmap = Gtk.VBox()
+        vbox_heatmap = Gtk.VBox()
 
         eb_total_activities = Gtk.EventBox()
         eb_journal_entries = Gtk.EventBox()
@@ -117,7 +117,7 @@ class DashboardActivity(activity.Activity):
         eb_total_activities.add(vbox_total_activities)
         eb_journal_entries.add(vbox_journal_entries)
         eb_total_contribs.add(vbox_total_contribs)
-        eb_heatmap.add(hbox_heatmap)
+        eb_heatmap.add(vbox_heatmap)
         eb_pie.add(self.vbox_pie)
         eb_tree.add(vbox_tree)
 
@@ -190,7 +190,7 @@ class DashboardActivity(activity.Activity):
         self.update_chart()
 
         # font
-        font_main = Pango.FontDescription("Granada 14")
+        font_main = Pango.FontDescription("Granada 12")
         label_JE.modify_font(font_main)
         label_CE.modify_font(font_main)
         label_TA.modify_font(font_main)
@@ -283,6 +283,7 @@ class DashboardActivity(activity.Activity):
             cbox_store.append([item])
 
         combobox = Gtk.ComboBox.new_with_model(cbox_store)
+        combobox.set_halign(Gtk.Align.START)
         combobox.connect("changed", self._on_name_combo_changed_cb)
         renderer_text = Gtk.CellRendererText()
         combobox.pack_start(renderer_text, True)
@@ -325,8 +326,8 @@ class DashboardActivity(activity.Activity):
         label_heatmap = Gtk.Label(_("User Activity"))
         grid_heatmap = Gtk.Grid(column_spacing=3, row_spacing=2)
         grid_heatmap.set_halign(Gtk.Align.CENTER)
-        hbox_heatmap.pack_start(label_heatmap, False, True, 5)
-        hbox_heatmap.pack_start(grid_heatmap, False, True, 5)
+        vbox_heatmap.pack_start(label_heatmap, False, True, 5)
+        vbox_heatmap.pack_start(grid_heatmap, False, True, 5)
 
         self.dates, self.dates_a, months = self._generate_dates()
         self._build_heatmap(grid_heatmap, self.dates, self.dates_a, months)
@@ -355,7 +356,7 @@ class DashboardActivity(activity.Activity):
             heatmap_treeview.append_column(column2)
             heatmap_treeview.append_column(column3)
 
-        hbox_heatmap.pack_start(heatmap_treeview, False, True, 5)
+        vbox_heatmap.pack_start(heatmap_treeview, False, True, 5)
 
         selected_row_heatmap = heatmap_treeview.get_selection()
         selected_row_heatmap.connect("changed", self._item_select_cb)
