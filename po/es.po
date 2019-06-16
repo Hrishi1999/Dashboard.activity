@@ -1,0 +1,103 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-06-14 16:50+0530\n"
+"PO-Revision-Date: 2019-06-14 16:58+0530\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.2.3\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: es\n"
+
+#: activity/activity.info:2 activity.py:139
+msgid "Dashboard"
+msgstr "Tablero"
+
+#: activity/activity.info:3
+msgid "A Dashboard for users showing different stats"
+msgstr "Un tablero para usuarios que muestran diferentes estadísticas."
+
+#: activity.py:144
+msgid "Activities Installed"
+msgstr "Actividades instaladas"
+
+#: activity.py:153 activity.py:305
+msgid "Journal Entries"
+msgstr "Entradas de diario"
+
+#: activity.py:162
+msgid "Total Files"
+msgstr "Archivos totales"
+
+#: activity.py:168
+msgid "Most used activities"
+msgstr "Actividades más utilizadas"
+
+#: activity.py:315
+msgid "Recently Opened Activities"
+msgstr "Actividades recientemente abiertas"
+
+#: activity.py:325
+msgid "User Activity"
+msgstr "Actividad del usuario"
+
+#: activity.py:627
+msgid "Label"
+msgstr "Etiqueta"
+
+#: activity.py:637
+msgid "Value"
+msgstr "Valor"
+
+#: readers.py:42
+msgid "Free space"
+msgstr "Espacio libre"
+
+#: readers.py:43
+msgid "Used space"
+msgstr "Espacio usado"
+
+#: readers.py:144
+msgid "turtle"
+msgstr "tortuga"
+
+#: readers.py:144
+msgid "pen"
+msgstr "pluma"
+
+#: readers.py:144
+msgid "number"
+msgstr "número"
+
+#: readers.py:144
+msgid "flow"
+msgstr "flujo"
+
+#: readers.py:144
+msgid "box"
+msgstr "caja"
+
+#: readers.py:145
+msgid "sensor"
+msgstr "sensor"
+
+#: readers.py:145
+msgid "media"
+msgstr "medios"
+
+#: readers.py:145
+msgid "extras"
+msgstr "extros"
+
+#: readers.py:270
+msgid "other"
+msgstr "otro"
