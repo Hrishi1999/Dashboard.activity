@@ -58,8 +58,6 @@ class DashboardActivity(activity.Activity):
         self.current_chart = None
         self.x_label = ""
         self.y_label = ""
-        self.chart_color = utils.get_user_fill_color('str')
-        self.chart_line_color = utils.get_user_stroke_color('str')
         self.chart_data = []
 
         # toolbar with the new toolbar redesign
@@ -250,6 +248,7 @@ class DashboardActivity(activity.Activity):
                                        datastore.DSMetadata, str, str)
         self.treeview = Gtk.TreeView(self.liststore)
         self.treeview.set_headers_visible(False)
+        self.treeview.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
 
         for i, col_title in enumerate(["Recently Opened Activities"]):
 
@@ -283,7 +282,7 @@ class DashboardActivity(activity.Activity):
             cbox_store.append([item])
 
         combobox = Gtk.ComboBox.new_with_model(cbox_store)
-        combobox.set_halign(Gtk.Align.START)
+        combobox.set_halign(Gtk.Align.END)
         combobox.connect("changed", self._on_name_combo_changed_cb)
         renderer_text = Gtk.CellRendererText()
         combobox.pack_start(renderer_text, True)
@@ -303,10 +302,10 @@ class DashboardActivity(activity.Activity):
         scrolled_window.show()
 
         hbox_tree2 = Gtk.HBox()
-        text_treeview = " {0} ".format(_("Journal Entries"))
+        text_treeview = "{0}".format(_("Journal Entries"))
         self.label_treeview = Gtk.Label(text_treeview)
-        hbox_tree2.pack_start(self.label_treeview, False, True, 0)
-        hbox_tree2.pack_start(combobox, True, True, 0)
+        hbox_tree2.pack_start(self.label_treeview, False, True, 10)
+        hbox_tree2.pack_start(combobox, True, True, 10)
 
         vbox_tree.pack_start(hbox_tree2, False, False, 5)
         scrolled_window.add(self.treeview)
@@ -336,9 +335,9 @@ class DashboardActivity(activity.Activity):
                                                datastore.DSMetadata, str, str)
         heatmap_treeview = Gtk.TreeView(self.heatmap_liststore)
         heatmap_treeview.set_headers_visible(False)
+        heatmap_treeview.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
 
         for i, col_title in enumerate(["Activity"]):
-
             renderer_title = Gtk.CellRendererText()
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
@@ -508,17 +507,12 @@ class DashboardActivity(activity.Activity):
         self.current_chart.width = new_width
         self.current_chart.height = new_height
 
-        # Set options
-        self.current_chart.set_color_scheme(color=self.chart_color)
-        self.current_chart.set_line_color(self.chart_line_color)
-
         try:
             if self.current_chart.type == "pie":
                 self.current_chart.render(self)
             else:
                 self.current_chart.render()
             self.charts_area.queue_draw()
-
         except (ZeroDivisionError, ValueError):
             pass
 

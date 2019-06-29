@@ -32,6 +32,13 @@ class PieChart(Chart):
         self.centery = 0
         self.layout = PieLayout(self.slices)
 
+        self.colors = [[0, 255, 0],
+                       [0, 200, 204],
+                       [120, 203, 0],
+                       [107, 0, 202],
+                       [194, 0, 0],
+                       ]
+
     def _updateChart(self):
         """Evaluates measures for pie charts"""
         slices = [dict(name=key,
@@ -62,7 +69,7 @@ class PieChart(Chart):
                 _slice = lookup.get(tick.v, None)
                 label = tick.label or str(tick.v)
                 if _slice is not None:
-                    label += ' (%.1f%%)' % (_slice.fraction * 100)
+                    label += ' (%.0f%%)' % (_slice.fraction * 100)
                     self.xticks.append((tick.v, label))
         else:
             for _slice in self.slices:
@@ -94,9 +101,18 @@ class PieChart(Chart):
             cx.restore()
 
         cx.save()
+
+        ctr = 0
+        color_len = len(self.colors)
+
         for slice in self.slices:
             if slice.isBigEnough():
-                cx.set_source_rgb(*self.colorScheme[slice.name])
+                if ctr == color_len - 1:
+                    ctr = 0
+                else:
+                    ctr = ctr + 1
+                cx.set_source_rgb(*self.colors[ctr])
+
                 if self.options.shouldFill:
                     slice.draw(cx, self.centerx, self.centery,
                                self.layout.radius)
@@ -107,7 +123,7 @@ class PieChart(Chart):
                                self.layout.radius)
                     cx.set_line_width(self.options.stroke.width)
                     cx.set_source_rgb(*hex2rgb(self.options.stroke.color))
-                    cx.stroke()
+                    #cx.stroke()
 
         cx.restore()
 

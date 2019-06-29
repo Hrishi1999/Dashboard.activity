@@ -91,12 +91,10 @@ def get_channels():
     path = os.path.join('/sys/class/dmi/id', 'product_version')
     try:
         product = open(path).readline().strip()
-
     except:
         product = None
 
     if product == '1' or product == '1.0':
         return 1
-
     else:
         return 2
