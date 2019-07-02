@@ -177,7 +177,7 @@ class DashboardActivity(activity.Activity):
 
         eventbox = Gtk.EventBox()
         self.charts_area = ChartArea(self)
-        self.charts_area.connect('size_allocate', self._chart_size_allocate_cb)
+        self.charts_area.connect('size-allocate', self._chart_size_allocate_cb)
         eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
         eventbox.add(self.charts_area)
         self.vbox_pie.pack_start(eventbox, True, True, 0)
@@ -276,7 +276,7 @@ class DashboardActivity(activity.Activity):
 
         # combobox for sort selection
         cbox_store = Gtk.ListStore(str)
-        cbox_entries = ["All", "Files", "Oldest"]
+        cbox_entries = [_("Newest"), _("Files"), _("Oldest")]
 
         for item in cbox_entries:
             cbox_store.append([item])

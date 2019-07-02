@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-14 16:50+0530\n"
+"POT-Creation-Date: 2019-07-02 16:46+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: activity/activity.info:2 activity.py:139
+#: activity/activity.info:2 activity.py:137
 msgid "Dashboard"
 msgstr ""
 
@@ -25,20 +25,32 @@ msgstr ""
 msgid "A Dashboard for users showing different stats"
 msgstr ""
 
-#: activity.py:144
+#: activity.py:142
 msgid "Activities Installed"
 msgstr ""
 
-#: activity.py:153 activity.py:305
+#: activity.py:151 activity.py:305
 msgid "Journal Entries"
 msgstr ""
 
-#: activity.py:162
+#: activity.py:160
 msgid "Total Files"
 msgstr ""
 
-#: activity.py:168
+#: activity.py:166
 msgid "Most used activities"
+msgstr ""
+
+#: activity.py:279
+msgid "Newest"
+msgstr ""
+
+#: activity.py:279
+msgid "Files"
+msgstr ""
+
+#: activity.py:279
+msgid "Oldest"
 msgstr ""
 
 #: activity.py:315
@@ -49,11 +61,11 @@ msgstr ""
 msgid "User Activity"
 msgstr ""
 
-#: activity.py:627
+#: activity.py:622
 msgid "Label"
 msgstr ""
 
-#: activity.py:637
+#: activity.py:632
 msgid "Value"
 msgstr ""
 
