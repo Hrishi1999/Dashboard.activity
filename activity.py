@@ -16,18 +16,20 @@
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
-from gi.repository import Gtk, Gdk, Pango, GObject
+from gi.repository import Gtk, Gdk, Pango, GObject, GdkPixbuf
 import logging
 
 from gettext import gettext as _
 
 from sugar3.activity import activity
 from sugar3.activity.activity import launch_bundle
+from sugar3.activity.activity import get_activity_root
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.graphics.icon import CellRendererIcon
 from sugar3.graphics import style
 from sugar3.activity.widgets import ActivityButton
 from sugar3.activity.widgets import StopButton
+from sugar3.graphics.toolbutton import ToolButton
 from sugar3.datastore import datastore
 from sugar3 import profile
 
@@ -59,6 +61,7 @@ class DashboardActivity(activity.Activity):
         self.x_label = ""
         self.y_label = ""
         self.chart_data = []
+        self.pie_dir = activity.get_activity_root()
 
         # toolbar with the new toolbar redesign
         toolbar_box = ToolbarBox()
@@ -66,6 +69,11 @@ class DashboardActivity(activity.Activity):
         activity_button = ActivityButton(self)
         toolbar_box.toolbar.insert(activity_button, 0)
         activity_button.show()
+
+        refresh_button = ToolButton('view-refresh')
+        refresh_button.set_tooltip_text(_("Refresh Data"))
+        toolbar_box.toolbar.insert(refresh_button, -1)
+        refresh_button.show()
 
         separator = Gtk.SeparatorToolItem()
         separator.props.draw = False
@@ -172,15 +180,48 @@ class DashboardActivity(activity.Activity):
 
         # pie chart
         self.labels_and_values = ChartData(self)
-        self.labels_and_values.connect("label-changed", self._label_changed_cb)
-        self.labels_and_values.connect("value-changed", self._value_changed_cb)
-
-        eventbox = Gtk.EventBox()
+        self.eventbox = Gtk.EventBox()
         self.charts_area = ChartArea(self)
         self.charts_area.connect('size-allocate', self._chart_size_allocate_cb)
-        eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
-        eventbox.add(self.charts_area)
-        self.vbox_pie.pack_start(eventbox, True, True, 0)
+        self.eventbox.modify_bg(Gtk.StateType.NORMAL, Gdk.color_parse("white"))
+        self.eventbox.add(self.charts_area)
+        self.vbox_pie.pack_start(self.eventbox, True, True, 0)
+        self.eventbox.connect('button-press-event', self._pie_opened)
+        self.charts_area.set_tooltip_text(_("Click for more information"))
+
+        # pie chart window
+        self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.window.set_border_width(2)
+        self.window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
+        self.window.set_decorated(True)
+        self.window.set_resizable(False)
+        self.window.set_modal(True)
+        self.window.set_keep_above(True)
+        self.window.set_size_request(800, 600)
+        self.window.set_title("Pie Chart")
+        self.window.connect('delete-event', self._hide_window)
+
+        eb_holder = Gtk.EventBox()
+        eb_image_holder = Gtk.EventBox()
+        eb_image_holder.modify_bg(Gtk.StateType.NORMAL,
+                                      Gdk.color_parse("ffffff"))
+        self.window.modify_bg(Gtk.StateType.NORMAL,
+                                      Gdk.color_parse("#282828"))
+
+        vbox_image = Gtk.VBox()
+        eb_image_holder.add(vbox_image)
+
+        # load pie image
+        # not using get_activity_root for now
+        image = Gtk.Image()
+        image.set_from_file("/tmp/screenshot.png")
+        vbox_image.add(image)
+
+        self.vbox_holder = Gtk.VBox()
+        self.vbox_holder.pack_start(eb_image_holder, True, True, 0)
+        self.vbox_holder.pack_start(self.labels_and_values, False, False, 0)
+        eb_holder.add(self.vbox_holder)
+        self.window.add(eb_holder)
 
         reader = JournalReader()
         self._graph_from_reader(reader)
@@ -376,6 +417,14 @@ class DashboardActivity(activity.Activity):
                             Gtk.PositionType.BOTTOM, 150, 75)
         grid.show_all()
 
+    def _pie_opened(self, widget, event):
+        self.window.show()
+        self.window.show_all()
+
+    def _hide_window(self, *args):
+        self.window.hide()
+        return Gtk.true
+
     def _build_heatmap(self, grid, dates, dates_a, months):
         j = 1
         k = 1
@@ -463,7 +512,6 @@ class DashboardActivity(activity.Activity):
         for i in range(1, 13):
             month_abre = datetime.date(year, i, 1).strftime('%b')
             months.append(month_abre)
-            _logger.info(str(month_abre))
 
         return result, result_a, months
 
@@ -513,6 +561,8 @@ class DashboardActivity(activity.Activity):
             else:
                 self.current_chart.render()
             self.charts_area.queue_draw()
+            surface = self.charts_area.get_surface()
+            surface.write_to_png('/tmp/screenshot.png')
         except (ZeroDivisionError, ValueError):
             pass
 
@@ -559,16 +609,6 @@ class DashboardActivity(activity.Activity):
         self.current_chart.set_y_label(self.y_label)
         self._render_chart()
 
-    def _value_changed_cb(self, treeview, path, new_value):
-        path = int(path)
-        self.chart_data[path] = (self.chart_data[path][0], float(new_value))
-        self._update_chart_data()
-
-    def _label_changed_cb(self, treeview, path, new_label):
-        path = int(path)
-        self.chart_data[path] = (new_label, self.chart_data[path][1])
-        self._update_chart_data()
-
 
 class ChartArea(Gtk.DrawingArea):
 
@@ -600,29 +640,24 @@ class ChartArea(Gtk.DrawingArea):
                                    cypos)
         context.paint()
 
+    def get_surface(self):
+        return self._parent.current_chart.surface
+
 
 class ChartData(Gtk.TreeView):
 
-    __gsignals__ = {'label-changed': (GObject.SignalFlags.RUN_FIRST, None,
-                                      [str, str], ),
-                    'value-changed': (GObject.SignalFlags.RUN_FIRST, None,
-                                      [str, str], ), }
-
     def __init__(self, activity):
-
         GObject.GObject.__init__(self)
 
         self.model = Gtk.ListStore(str, str)
         self.set_model(self.model)
 
         self._selection = self.get_selection()
-        self._selection.set_mode(Gtk.SelectionMode.SINGLE)
+        self._selection.set_mode(Gtk.SelectionMode.NONE)
 
         # Label column
         column = Gtk.TreeViewColumn(_("Label"))
         label = Gtk.CellRendererText()
-        label.set_property('editable', True)
-        label.connect("edited", self._label_changed_cb, self.model)
 
         column.pack_start(label, True)
         column.add_attribute(label, 'text', 0)
@@ -631,8 +666,6 @@ class ChartData(Gtk.TreeView):
         # Value column
         column = Gtk.TreeViewColumn(_("Value"))
         value = Gtk.CellRendererText()
-        value.set_property('editable', True)
-        value.connect("edited", self._value_changed_cb, self.model, activity)
 
         column.pack_start(value, True)
         column.add_attribute(value, 'text', 1)
@@ -662,34 +695,8 @@ class ChartData(Gtk.TreeView):
 
         return path
 
-    def _label_changed_cb(self, cell, path, new_text, model):
-        _logger.info("Change '%s' to '%s'" % (model[path][0], new_text))
-        model[path][0] = new_text
-
-        self.emit("label-changed", str(path), new_text)
-
-    def _value_changed_cb(self, cell, path, new_text, model, activity):
-        _logger.info("Change '%s' to '%s'" % (model[path][1], new_text))
-        is_number = True
-        number = new_text.replace(",", ".")
-        try:
-            float(number)
-        except ValueError:
-            is_number = False
-
-        if is_number:
-            decimals = utils.get_decimals(str(float(number)))
-            new_text = locale.format('%.' + decimals + 'f', float(number))
-            model[path][1] = str(new_text)
-
-            self.emit("value-changed", str(path), number)
-
-        elif not is_number:
-            _logger.info("Must be a valid value (int)")
-
 
 class CellRendererActivityIcon(CellRendererIcon):
-    __gtype_name__ = 'JournalCellRendererActivityIcon'
 
     def __init__(self):
         CellRendererIcon.__init__(self)
