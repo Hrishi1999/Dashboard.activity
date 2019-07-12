@@ -39,6 +39,7 @@ from jarabe.journal import misc
 from charts import Chart
 from readers import JournalReader
 
+import os
 import utils
 import datetime
 import locale
@@ -87,6 +88,17 @@ class DashboardActivity(activity.Activity):
 
         self.set_toolbar_box(toolbar_box)
         toolbar_box.show()
+
+        # Detect if device is a XO
+        if os.path.exists('/etc/olpc-release') or \
+           os.path.exists('/sys/power/olpc-pm'):
+            STATS_WIDTH = 45
+            TP_WIDTH = 65
+            HMAP_WIDTH = 125
+        else:
+            STATS_WIDTH = 50
+            TP_WIDTH = 75
+            HMAP_WIDTH = 150
 
         # ScrolledWindow as the main container
         scrolled_window_main = Gtk.ScrolledWindow()
@@ -204,9 +216,9 @@ class DashboardActivity(activity.Activity):
         eb_holder = Gtk.EventBox()
         eb_image_holder = Gtk.EventBox()
         eb_image_holder.modify_bg(Gtk.StateType.NORMAL,
-                                      Gdk.color_parse("ffffff"))
+                                  Gdk.color_parse("ffffff"))
         self.window.modify_bg(Gtk.StateType.NORMAL,
-                                      Gdk.color_parse("#282828"))
+                              Gdk.color_parse("#282828"))
 
         vbox_image = Gtk.VBox()
         eb_image_holder.add(vbox_image)
@@ -404,17 +416,17 @@ class DashboardActivity(activity.Activity):
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
         grid.attach_next_to(eb_total_activities, label_dashboard,
-                            Gtk.PositionType.BOTTOM, 50, 35)
+                            Gtk.PositionType.BOTTOM, STATS_WIDTH, 35)
         grid.attach_next_to(eb_journal_entries, eb_total_activities,
-                            Gtk.PositionType.RIGHT, 50, 35)
+                            Gtk.PositionType.RIGHT, STATS_WIDTH, 35)
         grid.attach_next_to(eb_total_contribs, eb_journal_entries,
-                            Gtk.PositionType.RIGHT, 50, 35)
+                            Gtk.PositionType.RIGHT, STATS_WIDTH, 35)
         grid.attach_next_to(eb_tree, eb_total_activities,
-                            Gtk.PositionType.BOTTOM, 75, 90)
+                            Gtk.PositionType.BOTTOM, TP_WIDTH, 90)
         grid.attach_next_to(eb_pie, eb_tree,
-                            Gtk.PositionType.RIGHT, 75, 90)
+                            Gtk.PositionType.RIGHT, TP_WIDTH, 90)
         grid.attach_next_to(eb_heatmap, eb_tree,
-                            Gtk.PositionType.BOTTOM, 150, 75)
+                            Gtk.PositionType.BOTTOM, HMAP_WIDTH, 75)
         grid.show_all()
 
     def _pie_opened(self, widget, event):
