@@ -62,7 +62,13 @@ class DashboardActivity(activity.Activity):
         self.x_label = ""
         self.y_label = ""
         self.chart_data = []
-        self.pie_dir = activity.get_activity_root()
+        self.mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
+                           'image/png', 'image/tiff',
+                           'application/pdf',
+                           'application/vnd.olpc-sugar',
+                           'application/rtf', 'text/rtf',
+                           'application/epub+zip', 'text/html',
+                           'application/x-pdf']
 
         # toolbar with the new toolbar redesign
         toolbar_box = ToolbarBox()
@@ -73,6 +79,7 @@ class DashboardActivity(activity.Activity):
 
         refresh_button = ToolButton('view-refresh')
         refresh_button.set_tooltip_text(_("Refresh Data"))
+        refresh_button.connect('clicked', self._load_data)
         toolbar_box.toolbar.insert(refresh_button, -1)
         refresh_button.show()
 
@@ -252,49 +259,14 @@ class DashboardActivity(activity.Activity):
         label_contribs.modify_font(font_actual)
         label_dashboard.modify_font(font_actual)
 
-        # get total number of activities
+        # get total number of activities installed
         registry = bundleregistry.get_registry()
-        dsobjects, journal_entries = datastore.find({})
-
-        mime_types = ['image/bmp', 'image/gif', 'image/jpeg',
-                      'image/png', 'image/tiff', 'application/pdf',
-                      'application/vnd.olpc-sugar',
-                      'application/rtf', 'text/rtf',
-                      'application/epub+zip', 'text/html',
-                      'application/x-pdf']
 
         self.treeview_list = []
         self.files_list = []
         self.old_list = []
         self.heatmap_list = []
-
-        # to check journal entries which are only a file
-        for dsobject in dsobjects:
-            new = []
-            new.append(dsobject.metadata['title'])
-            new.append(misc.get_icon_name(dsobject.metadata))
-            new.append(dsobject.metadata['activity_id'])
-            new.append(profile.get_color())
-            new.append(dsobject.get_object_id())
-            new.append(dsobject.metadata)
-            new.append(misc.get_date(dsobject.metadata))
-            new.append(dsobject.metadata['mtime'])
-            self.treeview_list.append(new)
-            self.old_list.append(new)
-
-            if dsobject.metadata['mime_type'] in mime_types:
-                new2 = []
-                new2.append(dsobject.metadata['title'])
-                new2.append(misc.get_icon_name(dsobject.metadata))
-                new2.append(dsobject.metadata['activity_id'])
-                new2.append(profile.get_color())
-                new2.append(dsobject.get_object_id())
-                new2.append(dsobject.metadata)
-                new2.append(misc.get_date(dsobject.metadata))
-                new2.append(dsobject.metadata['mtime'])
-                self.files_list.append(new2)
-
-            self.old_list = sorted(self.old_list, key=lambda x: x[7])
+        self.journal_entries = 0
 
         # treeview for Journal entries
         self.liststore = Gtk.ListStore(str, str, str, object, str,
@@ -302,6 +274,7 @@ class DashboardActivity(activity.Activity):
         self.treeview = Gtk.TreeView(self.liststore)
         self.treeview.set_headers_visible(False)
         self.treeview.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
+        self._load_data()
 
         for i, col_title in enumerate(["Recently Opened Activities"]):
 
@@ -336,7 +309,7 @@ class DashboardActivity(activity.Activity):
 
         combobox = Gtk.ComboBox.new_with_model(cbox_store)
         combobox.set_halign(Gtk.Align.END)
-        combobox.connect("changed", self._on_name_combo_changed_cb)
+        combobox.connect('changed', self._on_name_combo_changed_cb)
         renderer_text = Gtk.CellRendererText()
         combobox.pack_start(renderer_text, True)
         combobox.add_attribute(renderer_text, "text", 0)
@@ -345,7 +318,7 @@ class DashboardActivity(activity.Activity):
         self._add_to_treeview(self.treeview_list)
 
         selected_row = self.treeview.get_selection()
-        selected_row.connect("changed", self._item_select_cb)
+        selected_row.connect('changed', self._item_select_cb)
 
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_can_focus(False)
@@ -371,7 +344,7 @@ class DashboardActivity(activity.Activity):
         vbox_tree.add(scrolled_window)
 
         label_total_activities.set_text(str(len(registry)))
-        label_journal_entries.set_text(str(journal_entries))
+        label_journal_entries.set_text(str(self.journal_entries))
         label_contribs.set_text(str(len(self.files_list)))
 
         # heatmap
@@ -411,7 +384,7 @@ class DashboardActivity(activity.Activity):
         vbox_heatmap.pack_start(heatmap_treeview, False, True, 5)
 
         selected_row_heatmap = heatmap_treeview.get_selection()
-        selected_row_heatmap.connect("changed", self._item_select_cb)
+        selected_row_heatmap.connect('changed', self._item_select_cb)
 
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 20, 20)
@@ -428,6 +401,43 @@ class DashboardActivity(activity.Activity):
         grid.attach_next_to(eb_heatmap, eb_tree,
                             Gtk.PositionType.BOTTOM, HMAP_WIDTH, 75)
         grid.show_all()
+
+    def _load_data(self, widget=None):
+        del self.treeview_list[:]
+        del self.files_list[:]
+        del self.old_list[:]
+        del self.heatmap_list[:]
+
+        dsobjects, journal_entries = datastore.find({})
+        for dsobject in dsobjects:
+            new = []
+            new.append(dsobject.metadata['title'])
+            new.append(misc.get_icon_name(dsobject.metadata))
+            new.append(dsobject.metadata['activity_id'])
+            new.append(profile.get_color())
+            new.append(dsobject.get_object_id())
+            new.append(dsobject.metadata)
+            new.append(misc.get_date(dsobject.metadata))
+            new.append(dsobject.metadata['mtime'])
+            self.treeview_list.append(new)
+            self.old_list.append(new)
+
+            # determine if a file
+            if dsobject.metadata['mime_type'] in self.mime_types:
+                new2 = []
+                new2.append(dsobject.metadata['title'])
+                new2.append(misc.get_icon_name(dsobject.metadata))
+                new2.append(dsobject.metadata['activity_id'])
+                new2.append(profile.get_color())
+                new2.append(dsobject.get_object_id())
+                new2.append(dsobject.metadata)
+                new2.append(misc.get_date(dsobject.metadata))
+                new2.append(dsobject.metadata['mtime'])
+                self.files_list.append(new2)
+
+            self.old_list = sorted(self.old_list, key=lambda x: x[7])
+            self.journal_entries = journal_entries
+            self._add_to_treeview(self.treeview_list)
 
     def _pie_opened(self, widget, event):
         self.window.show()
@@ -539,7 +549,7 @@ class DashboardActivity(activity.Activity):
             selected_item = model[tree_iter][0]
             if selected_item == "Files":
                 self._add_to_treeview(self.files_list)
-            elif selected_item == "All":
+            elif selected_item == "Newest":
                 self._add_to_treeview(self.treeview_list)
             elif selected_item == "Oldest":
                 self._add_to_treeview(self.old_list)
@@ -630,7 +640,7 @@ class ChartArea(Gtk.DrawingArea):
         self._parent = parent
         self.add_events(Gdk.EventMask.EXPOSURE_MASK |
                         Gdk.EventMask.VISIBILITY_NOTIFY_MASK)
-        self.connect("draw", self._draw_cb)
+        self.connect('draw', self._draw_cb)
 
     def _draw_cb(self, widget, context):
         alloc = self.get_allocation()
