@@ -117,7 +117,7 @@ class DashboardActivity(activity.Activity):
         self.set_canvas(scrolled_window_main)
 
         frame = Gtk.Frame()
-        scrolled_window_main.add(frame)
+        scrolled_window_main.add_with_viewport(frame)
         frame.show()
         grid = Gtk.Grid(column_spacing=6, row_spacing=3.5)
         grid.set_border_width(20)
@@ -331,7 +331,7 @@ class DashboardActivity(activity.Activity):
         hbox_tree2.pack_start(combobox, True, True, 10)
 
         vbox_tree.pack_start(hbox_tree2, False, False, 5)
-        scrolled_window.add(self.treeview)
+        scrolled_window.add_with_viewport(self.treeview)
 
         # label for recent activities
         label_rec = Gtk.Label(expand=False)
