@@ -170,8 +170,8 @@ class DashboardActivity(activity.Activity):
         label_TA.set_markup(text_TA)
         vbox_total_activities.add(label_TA)
 
-        label_total_activities = Gtk.Label()
-        vbox_total_activities.add(label_total_activities)
+        self.label_total_activities = Gtk.Label()
+        vbox_total_activities.add(self.label_total_activities)
 
         # label for total journal entries
         label_JE = Gtk.Label()
@@ -179,8 +179,8 @@ class DashboardActivity(activity.Activity):
         label_JE.set_markup(text_JE)
         vbox_journal_entries.add(label_JE)
 
-        label_journal_entries = Gtk.Label()
-        vbox_journal_entries.add(label_journal_entries)
+        self.label_journal_entries = Gtk.Label()
+        vbox_journal_entries.add(self.label_journal_entries)
 
         # label for files
         label_CE = Gtk.Label()
@@ -194,8 +194,8 @@ class DashboardActivity(activity.Activity):
         label_PIE.set_markup(text_PIE)
         self.vbox_pie.pack_start(label_PIE, False, True, 5)
 
-        label_contribs = Gtk.Label()
-        vbox_total_contribs.add(label_contribs)
+        self.label_contribs = Gtk.Label()
+        vbox_total_contribs.add(self.label_contribs)
 
         # pie chart
         self.labels_and_values = ChartData(self)
@@ -254,13 +254,10 @@ class DashboardActivity(activity.Activity):
         label_TA.modify_font(font_main)
 
         font_actual = Pango.FontDescription("12")
-        label_journal_entries.modify_font(font_actual)
-        label_total_activities.modify_font(font_actual)
-        label_contribs.modify_font(font_actual)
+        self.label_journal_entries.modify_font(font_actual)
+        self.label_total_activities.modify_font(font_actual)
+        self.label_contribs.modify_font(font_actual)
         label_dashboard.modify_font(font_actual)
-
-        # get total number of activities installed
-        registry = bundleregistry.get_registry()
 
         self.treeview_list = []
         self.files_list = []
@@ -342,10 +339,6 @@ class DashboardActivity(activity.Activity):
         label_rec.set_markup(text_treeview)
 
         vbox_tree.add(scrolled_window)
-
-        label_total_activities.set_text(str(len(registry)))
-        label_journal_entries.set_text(str(self.journal_entries))
-        label_contribs.set_text(str(len(self.files_list)))
 
         # heatmap
         label_heatmap = Gtk.Label(_("User Activity"))
@@ -438,6 +431,14 @@ class DashboardActivity(activity.Activity):
             self.old_list = sorted(self.old_list, key=lambda x: x[7])
             self.journal_entries = journal_entries
             self._add_to_treeview(self.treeview_list)
+
+            # get number of activities installed
+            registry = bundleregistry.get_registry()
+            
+            self.label_total_activities.set_text(str(len(registry)))
+            self.label_journal_entries.set_text(str(self.journal_entries))
+            self.label_contribs.set_text(str(len(self.files_list)))
+
 
     def _pie_opened(self, widget, event):
         self.window.show()
