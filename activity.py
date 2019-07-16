@@ -27,7 +27,7 @@ from sugar3.activity.activity import get_activity_root
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.graphics.icon import CellRendererIcon
 from sugar3.graphics import style
-from sugar3.activity.widgets import ActivityButton
+from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.activity.widgets import StopButton
 from sugar3.graphics.toolbutton import ToolButton
 from sugar3.datastore import datastore
@@ -73,7 +73,7 @@ class DashboardActivity(activity.Activity):
         # toolbar with the new toolbar redesign
         toolbar_box = ToolbarBox()
 
-        activity_button = ActivityButton(self)
+        activity_button = ActivityToolbarButton(self)
         toolbar_box.toolbar.insert(activity_button, 0)
         activity_button.show()
 
