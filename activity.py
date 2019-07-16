@@ -116,13 +116,10 @@ class DashboardActivity(activity.Activity):
         scrolled_window_main.show()
         self.set_canvas(scrolled_window_main)
 
-        frame = Gtk.Frame()
-        scrolled_window_main.add_with_viewport(frame)
-        frame.show()
         grid = Gtk.Grid(column_spacing=6, row_spacing=3.5)
         grid.set_border_width(20)
         grid.set_halign(Gtk.Align.CENTER)
-        frame.add(grid)
+        scrolled_window_main.add_with_viewport(grid)
 
         # VBoxes for total activities, journal entries and total files
         vbox_total_activities = Gtk.VBox()
@@ -342,7 +339,7 @@ class DashboardActivity(activity.Activity):
 
         # heatmap
         label_heatmap = Gtk.Label(_("User Activity"))
-        grid_heatmap = Gtk.Grid(column_spacing=3, row_spacing=2)
+        grid_heatmap = Gtk.Grid(column_spacing=2, row_spacing=2)
         grid_heatmap.set_halign(Gtk.Align.CENTER)
         vbox_heatmap.pack_start(label_heatmap, False, True, 5)
         vbox_heatmap.pack_start(grid_heatmap, False, True, 5)
