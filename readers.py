@@ -28,6 +28,7 @@ from gettext import gettext as _
 
 from sugar3 import env
 from sugar3 import profile
+from sugar3.datastore import datastore
 
 
 class FreeSpaceReader():
@@ -213,7 +214,6 @@ class TurtleReader():
 
 
 MAX = 19
-DIROFINTEREST = 'datastore'
 class ParseJournal():
     ''' Simple parser of datastore '''
 
@@ -221,34 +221,14 @@ class ParseJournal():
         self._dsdict = {}
         self._activity_name = []
         self._activity_count = []
-        homepath = os.environ['HOME']
-
-        for path in glob.glob(os.path.join(homepath, '.sugar', '*')):
-            if isdsdir(path):
-                self._dsdict[os.path.basename(path)] = []
-                dsobjdirs = glob.glob(
-                    os.path.join(path, DIROFINTEREST, '??'))
-                for dsobjdir in dsobjdirs:
-                    dsobjs = glob.glob(os.path.join(dsobjdir, '*'))
-                    for dsobj in dsobjs:
-                        self._dsdict[os.path.basename(path)].append({})
-                        activity = isactivity(dsobj)
-                        if not activity:
-                            self._dsdict[os.path.basename(path)][-1][
-                                'activity'] = 'Media Object'
-                        else:
-                            self._dsdict[os.path.basename(path)][-1][
-                                'activity'] = activity
-
-        for k, v in list(self._dsdict.items()):
-            for a in v:
-                if 'activity' in a:
-                    if a['activity'] in self._activity_name:
-                        i = self._activity_name.index(a['activity'])
-                        self._activity_count[i] += 1
-                    else:
-                        self._activity_name.append(a['activity'])
-                        self._activity_count.append(1)
+       
+        dsobjects, journal_entries = datastore.find({})
+        for dobj in dsobjects:
+            name = dobj.metadata['activity']
+            activity_name = name.split('.')[-1]
+            if not activity_name.isdigit():
+                self._activity_name.append(activity_name)
+                self._activity_count.append(1)
 
     def get_sorted(self):
         activity_tuples = []
@@ -267,7 +247,7 @@ class ParseJournal():
             else:
                 count += sorted_tuples[length - i - 1][1]
         if count > 0:
-            activity_list.append([_('other'), count])
+            activity_list.append([_('Others'), count])
         return activity_list
 
 
@@ -306,35 +286,3 @@ class JournalReader():
         """Return the h_label and y_label names."""
 
         return self.xlabel, self.ylabel
-
-
-def hascomponent(path, component):
-    ''' Return metadata attribute, if any '''
-    if not os.path.exists(os.path.join(path, 'metadata')):
-        return False
-    if not os.path.exists(os.path.join(path, 'metadata', component)):
-        return False
-    fd = open(os.path.join(path, 'metadata', component))
-    data = fd.readline()
-    fd.close()
-    if len(data) == 0:
-        return False
-    return data
-
-
-def isactivity(path):
-    ''' Return activity name '''
-    activity = hascomponent(path, 'activity')
-    if not activity:
-        return False
-    else:
-        return activity.split('.')[-1]
-
-
-def isdsdir(path):
-    ''' Only interested if it is a datastore directory '''
-    if not os.path.isdir(path):
-        return False
-    if not os.path.exists(os.path.join(path, DIROFINTEREST)):
-        return False
-    return True
