@@ -195,7 +195,7 @@ class Slice(object):
     def draw(self, cx, centerx, centery, radius):
         cx.new_path()
         cx.move_to(centerx, centery)
-        cx.arc(centerx, centery, radius, -self.endAngle, -self.startAngle)
+        cx.arc(centerx, centery, radius - 10, -self.endAngle, -self.startAngle)
         cx.close_path()
 
     def getNormalisedAngle(self):
