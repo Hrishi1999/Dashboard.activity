@@ -99,9 +99,9 @@ class DashboardActivity(activity.Activity):
         # Detect if device is a XO
         if os.path.exists('/etc/olpc-release') or \
            os.path.exists('/sys/power/olpc-pm'):
-            STATS_WIDTH = 45
-            TP_WIDTH = 65
-            HMAP_WIDTH = 125
+            STATS_WIDTH = 30
+            TP_WIDTH = 45
+            HMAP_WIDTH = 90
         else:
             STATS_WIDTH = 50
             TP_WIDTH = 75
