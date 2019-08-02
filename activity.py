@@ -99,10 +99,12 @@ class DashboardActivity(activity.Activity):
         # Detect if device is a XO
         if os.path.exists('/etc/olpc-release') or \
            os.path.exists('/sys/power/olpc-pm'):
+            COLUMN_SPACING = 1
             STATS_WIDTH = 30
             TP_WIDTH = 45
             HMAP_WIDTH = 90
         else:
+            COLUMN_SPACING = 2
             STATS_WIDTH = 50
             TP_WIDTH = 75
             HMAP_WIDTH = 150
@@ -339,7 +341,8 @@ class DashboardActivity(activity.Activity):
 
         # heatmap
         label_heatmap = Gtk.Label(_("User Activity"))
-        grid_heatmap = Gtk.Grid(column_spacing=2, row_spacing=2)
+        grid_heatmap = Gtk.Grid(column_spacing=COLUMN_SPACING,
+                                row_spacing=2)
         grid_heatmap.set_halign(Gtk.Align.CENTER)
         vbox_heatmap.pack_start(label_heatmap, False, True, 5)
         vbox_heatmap.pack_start(grid_heatmap, False, True, 5)
@@ -377,7 +380,7 @@ class DashboardActivity(activity.Activity):
         selected_row_heatmap.connect('changed', self._item_select_cb)
 
         # add views to grid
-        grid.attach(label_dashboard, 1, 2, 20, 20)
+        grid.attach(label_dashboard, 1, 2, 1, 1)
         grid.attach_next_to(eb_total_activities, label_dashboard,
                             Gtk.PositionType.BOTTOM, STATS_WIDTH, 35)
         grid.attach_next_to(eb_journal_entries, eb_total_activities,
@@ -431,11 +434,10 @@ class DashboardActivity(activity.Activity):
 
             # get number of activities installed
             registry = bundleregistry.get_registry()
-            
+
             self.label_total_activities.set_text(str(len(registry)))
             self.label_journal_entries.set_text(str(self.journal_entries))
             self.label_contribs.set_text(str(len(self.files_list)))
-
 
     def _pie_opened(self, widget, event):
         self.window.show()
