@@ -23,7 +23,6 @@ from gettext import gettext as _
 
 from sugar3.activity import activity
 from sugar3.activity.activity import launch_bundle
-from sugar3.activity.activity import get_activity_root
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.graphics.icon import CellRendererIcon
 from sugar3.graphics import style
@@ -42,7 +41,7 @@ from readers import JournalReader
 import os
 import utils
 import datetime
-import locale
+
 
 # logging
 _logger = logging.getLogger('dashboard-activity')
@@ -128,8 +127,8 @@ class DashboardActivity(activity.Activity):
         vbox_journal_entries = Gtk.VBox()
         vbox_total_contribs = Gtk.VBox()
         vbox_tree = Gtk.VBox()
-        self.vbox_pie = Gtk.VBox()
         vbox_heatmap = Gtk.VBox()
+        self.vbox_pie = Gtk.VBox()
 
         eb_total_activities = Gtk.EventBox()
         eb_journal_entries = Gtk.EventBox()
@@ -219,7 +218,6 @@ class DashboardActivity(activity.Activity):
         self.window.set_title("Pie Chart")
         self.window.connect('delete-event', self._hide_window)
 
-        eb_holder = Gtk.EventBox()
         eb_image_holder = Gtk.EventBox()
         eb_image_holder.modify_bg(Gtk.StateType.NORMAL,
                                   Gdk.color_parse("ffffff"))
@@ -229,17 +227,24 @@ class DashboardActivity(activity.Activity):
         vbox_image = Gtk.VBox()
         eb_image_holder.add(vbox_image)
 
+        # scrolled window for details window
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_can_focus(False)
+        scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC,
+                                   Gtk.PolicyType.AUTOMATIC)
+        scrolled_window.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled_window.show()
+
         # load pie image
         # not using get_activity_root for now
-        image = Gtk.Image()
-        image.set_from_file("/tmp/screenshot.png")
-        vbox_image.add(image)
+        self.image = Gtk.Image()
+        vbox_image.add(self.image)
 
         self.vbox_holder = Gtk.VBox()
         self.vbox_holder.pack_start(eb_image_holder, True, True, 0)
         self.vbox_holder.pack_start(self.labels_and_values, False, False, 0)
-        eb_holder.add(self.vbox_holder)
-        self.window.add(eb_holder)
+        self.window.add(scrolled_window)
+        scrolled_window.add_with_viewport(self.vbox_holder)
 
         reader = JournalReader()
         self._graph_from_reader(reader)
@@ -440,11 +445,18 @@ class DashboardActivity(activity.Activity):
             self.label_contribs.set_text(str(len(self.files_list)))
 
     def _pie_opened(self, widget, event):
+        self.update_chart(300)
+        self.vbox_holder.pack_start(self.labels_and_values, False, False, 0)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/tmp/screenshot.png",
+                                                         800, 550, True)
+        self.image.set_from_pixbuf(pixbuf)
         self.window.show()
         self.window.show_all()
 
     def _hide_window(self, *args):
+        self.vbox_holder.remove(self.labels_and_values)
         self.window.hide()
+        self.update_chart(0)
         return Gtk.true
 
     def _build_heatmap(self, grid, dates, dates_a, months):
@@ -565,14 +577,14 @@ class DashboardActivity(activity.Activity):
     def _chart_size_allocate_cb(self, widget, allocation):
         self._render_chart()
 
-    def _render_chart(self):
+    def _render_chart(self, extra_size=0):
         if self.current_chart is None or self.charts_area is None:
             return
 
         # Resize the chart for all the screen sizes
         alloc = self.vbox_pie.get_allocation()
-        new_width = alloc.width
-        new_height = alloc.height
+        new_width = alloc.width + extra_size
+        new_height = alloc.height + extra_size
 
         self.current_chart.width = new_width
         self.current_chart.height = new_height
@@ -610,12 +622,12 @@ class DashboardActivity(activity.Activity):
             self.chart_data.insert(pos, data)
             self._update_chart_data()
 
-    def update_chart(self):
+    def update_chart(self, extra_size=0):
         if self.current_chart:
             self.current_chart.data_set(self.chart_data)
             self.current_chart.set_x_label(self.x_label)
             self.current_chart.set_y_label(self.y_label)
-            self._render_chart()
+            self._render_chart(extra_size)
 
     def _update_chart_data(self):
         if self.current_chart is None:
