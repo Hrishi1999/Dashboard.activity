@@ -687,10 +687,10 @@ class ChartData(Gtk.TreeView):
         self.set_model(self.model)
 
         self._selection = self.get_selection()
-        self._selection.set_mode(Gtk.SelectionMode.NONE)
+        self._selection.set_mode(Gtk.SelectionMode.SINGLE)
 
         # Label column
-        column = Gtk.TreeViewColumn(_("Label"))
+        column = Gtk.TreeViewColumn(_("Activities"))
         label = Gtk.CellRendererText()
 
         column.pack_start(label, True)
@@ -698,7 +698,7 @@ class ChartData(Gtk.TreeView):
         self.append_column(column)
 
         # Value column
-        column = Gtk.TreeViewColumn(_("Value"))
+        column = Gtk.TreeViewColumn(_("Number of Instances"))
         value = Gtk.CellRendererText()
 
         column.pack_start(value, True)
