@@ -280,13 +280,14 @@ class DashboardActivity(activity.Activity):
         for i, col_title in enumerate(["Recently Opened Activities"]):
 
             renderer_title = Gtk.CellRendererText()
-            icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
+            icon_renderer = CellRendererActivityIcon()
 
             renderer_title.set_property('ellipsize', Pango.EllipsizeMode.END)
             renderer_title.set_property('ellipsize-set', True)
 
-            column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
+            column1 = Gtk.TreeViewColumn("Icon")
+            column1.pack_start(icon_renderer, True)
             column1.add_attribute(icon_renderer, 'file-name',
                                   1)
             column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
@@ -366,7 +367,8 @@ class DashboardActivity(activity.Activity):
             icon_renderer = CellRendererActivityIcon()
             renderer_time = Gtk.CellRendererText()
 
-            column1 = Gtk.TreeViewColumn("Icon", icon_renderer, text=0)
+            column1 = Gtk.TreeViewColumn("Icon")
+            column1.pack_start(icon_renderer, True)
             column1.add_attribute(icon_renderer, 'file-name',
                                   1)
             column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
