@@ -95,6 +95,9 @@ class DashboardActivity(activity.Activity):
         self.set_toolbar_box(toolbar_box)
         toolbar_box.show()
 
+        # notify when activity is back in focus
+        self.connect('notify::active', self._notify_active_cb)
+
         # Detect if device is a XO
         if os.path.exists('/etc/olpc-release') or \
            os.path.exists('/sys/power/olpc-pm'):
@@ -446,6 +449,10 @@ class DashboardActivity(activity.Activity):
             self.label_journal_entries.set_text(str(self.journal_entries))
             self.label_contribs.set_text(str(len(self.files_list)))
 
+    def _notify_active_cb(self, widget, pspec):
+        # refresh data when activity is active
+        self._load_data()
+    
     def _pie_opened(self, widget, event):
         self.update_chart(300)
         self.vbox_holder.pack_start(self.labels_and_values, False, False, 0)
