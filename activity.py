@@ -451,7 +451,8 @@ class DashboardActivity(activity.Activity):
 
     def _notify_active_cb(self, widget, pspec):
         # refresh data when activity is active
-        self._load_data()
+        if self.props.active:
+            self._load_data()
     
     def _pie_opened(self, widget, event):
         self.update_chart(300)
