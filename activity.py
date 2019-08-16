@@ -68,6 +68,7 @@ class DashboardActivity(activity.Activity):
                            'application/rtf', 'text/rtf',
                            'application/epub+zip', 'text/html',
                            'application/x-pdf']
+        self.is_updated = False
 
         # toolbar with the new toolbar redesign
         toolbar_box = ToolbarBox()
@@ -405,6 +406,9 @@ class DashboardActivity(activity.Activity):
                             Gtk.PositionType.BOTTOM, HMAP_WIDTH, 75)
         grid.show_all()
 
+    def _ds_updated(self, i):
+        self.is_updated = True
+
     def _load_data(self, widget=None):
         del self.treeview_list[:]
         del self.files_list[:]
@@ -422,6 +426,7 @@ class DashboardActivity(activity.Activity):
             new.append(dsobject.metadata)
             new.append(misc.get_date(dsobject.metadata))
             new.append(dsobject.metadata['mtime'])
+            dsobject.metadata.connect('updated', self._ds_updated)
             self.treeview_list.append(new)
             self.old_list.append(new)
 
@@ -451,8 +456,9 @@ class DashboardActivity(activity.Activity):
 
     def _notify_active_cb(self, widget, pspec):
         # refresh data when activity is active
-        if self.props.active:
+        if self.props.active and self.is_updated:
             self._load_data()
+            self.is_updated = False
     
     def _pie_opened(self, widget, event):
         self.update_chart(300)
