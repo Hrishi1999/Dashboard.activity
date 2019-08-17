@@ -144,7 +144,6 @@ class DashboardActivity(activity.Activity):
         eb_total_activities.add(vbox_total_activities)
         eb_journal_entries.add(vbox_journal_entries)
         eb_total_contribs.add(vbox_total_contribs)
-        eb_heatmap.add(vbox_heatmap)
         eb_pie.add(self.vbox_pie)
         eb_tree.add(vbox_tree)
 
@@ -360,12 +359,19 @@ class DashboardActivity(activity.Activity):
         self.dates, self.dates_a, months = self._generate_dates()
         self._build_heatmap(grid_heatmap, self.dates, self.dates_a, months)
 
+        scrolled_heatmap = Gtk.ScrolledWindow()
+        scrolled_heatmap.set_can_focus(False)
+        scrolled_heatmap.set_policy(Gtk.PolicyType.NEVER,
+                                   Gtk.PolicyType.AUTOMATIC)
+        scrolled_heatmap.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled_heatmap.show()
+        
         self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str,
                                                datastore.DSMetadata, str, str)
         heatmap_treeview = Gtk.TreeView(self.heatmap_liststore)
         heatmap_treeview.set_headers_visible(False)
         heatmap_treeview.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
-
+        
         for i, col_title in enumerate(["Activity"]):
             renderer_title = Gtk.CellRendererText()
             icon_renderer = CellRendererActivityIcon()
@@ -386,6 +392,8 @@ class DashboardActivity(activity.Activity):
             heatmap_treeview.append_column(column3)
 
         vbox_heatmap.pack_start(heatmap_treeview, False, True, 5)
+        scrolled_heatmap.add_with_viewport(vbox_heatmap)
+        eb_heatmap.add(scrolled_heatmap)
 
         selected_row_heatmap = heatmap_treeview.get_selection()
         selected_row_heatmap.connect('changed', self._item_select_cb)
