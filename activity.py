@@ -306,19 +306,19 @@ class DashboardActivity(activity.Activity):
             self.treeview.append_column(column3)
 
         # combobox for sort selection
-        cbox_store = Gtk.ListStore(str)
+        self.cbox_store = Gtk.ListStore(str)
         cbox_entries = [_("Newest"), _("Files"), _("Oldest")]
 
         for item in cbox_entries:
-            cbox_store.append([item])
+            self.cbox_store.append([item])
 
-        combobox = Gtk.ComboBox.new_with_model(cbox_store)
-        combobox.set_halign(Gtk.Align.END)
-        combobox.connect('changed', self._on_name_combo_changed_cb)
+        self.combobox = Gtk.ComboBox.new_with_model(self.cbox_store)
+        self.combobox.set_halign(Gtk.Align.END)
+        self.combobox.connect('changed', self._on_name_combo_changed_cb)
         renderer_text = Gtk.CellRendererText()
-        combobox.pack_start(renderer_text, True)
-        combobox.add_attribute(renderer_text, "text", 0)
-        combobox.set_active(0)
+        self.combobox.pack_start(renderer_text, True)
+        self.combobox.add_attribute(renderer_text, "text", 0)
+        self.combobox.set_active(0)
 
         self._add_to_treeview(self.treeview_list)
 
@@ -333,10 +333,11 @@ class DashboardActivity(activity.Activity):
         scrolled_window.show()
 
         hbox_tree2 = Gtk.HBox()
-        text_treeview = "{0}".format(_("Journal Entries"))
-        self.label_treeview = Gtk.Label(text_treeview)
+        text_treeview = "<b>{0}</b>".format(_("Journal Entries"))
+        self.label_treeview = Gtk.Label()
+        self.label_treeview.set_markup(text_treeview)
         hbox_tree2.pack_start(self.label_treeview, False, True, 10)
-        hbox_tree2.pack_start(combobox, True, True, 10)
+        hbox_tree2.pack_start(self.combobox, True, True, 10)
 
         vbox_tree.pack_start(hbox_tree2, False, False, 5)
         scrolled_window.add_with_viewport(self.treeview)
@@ -349,7 +350,9 @@ class DashboardActivity(activity.Activity):
         vbox_tree.add(scrolled_window)
 
         # heatmap
-        label_heatmap = Gtk.Label(_("User Activity"))
+        label_heatmap = Gtk.Label()
+        text_HE = "<b>{0}</b>".format(_("User Activity"))
+        label_heatmap.set_markup(text_HE)
         grid_heatmap = Gtk.Grid(column_spacing=COLUMN_SPACING,
                                 row_spacing=2)
         grid_heatmap.set_halign(Gtk.Align.CENTER)
@@ -359,44 +362,7 @@ class DashboardActivity(activity.Activity):
         self.dates, self.dates_a, months = self._generate_dates()
         self._build_heatmap(grid_heatmap, self.dates, self.dates_a, months)
 
-        scrolled_heatmap = Gtk.ScrolledWindow()
-        scrolled_heatmap.set_can_focus(False)
-        scrolled_heatmap.set_policy(Gtk.PolicyType.NEVER,
-                                   Gtk.PolicyType.AUTOMATIC)
-        scrolled_heatmap.set_shadow_type(Gtk.ShadowType.NONE)
-        scrolled_heatmap.show()
-        
-        self.heatmap_liststore = Gtk.ListStore(str, str, str, object, str,
-                                               datastore.DSMetadata, str, str)
-        heatmap_treeview = Gtk.TreeView(self.heatmap_liststore)
-        heatmap_treeview.set_headers_visible(False)
-        heatmap_treeview.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
-        
-        for i, col_title in enumerate(["Activity"]):
-            renderer_title = Gtk.CellRendererText()
-            icon_renderer = CellRendererActivityIcon()
-            renderer_time = Gtk.CellRendererText()
-
-            column1 = Gtk.TreeViewColumn("Icon")
-            column1.pack_start(icon_renderer, True)
-            column1.add_attribute(icon_renderer, 'file-name',
-                                  1)
-            column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-            column1.add_attribute(icon_renderer, 'xo-color',
-                                  3)
-            column2 = Gtk.TreeViewColumn(col_title, renderer_title, text=0)
-            column3 = Gtk.TreeViewColumn(col_title, renderer_time, text=6)
-
-            heatmap_treeview.append_column(column1)
-            heatmap_treeview.append_column(column2)
-            heatmap_treeview.append_column(column3)
-
-        vbox_heatmap.pack_start(heatmap_treeview, False, True, 5)
-        scrolled_heatmap.add_with_viewport(vbox_heatmap)
-        eb_heatmap.add(scrolled_heatmap)
-
-        selected_row_heatmap = heatmap_treeview.get_selection()
-        selected_row_heatmap.connect('changed', self._item_select_cb)
+        eb_heatmap.add(vbox_heatmap)
 
         # add views to grid
         grid.attach(label_dashboard, 1, 2, 1, 1)
@@ -406,12 +372,13 @@ class DashboardActivity(activity.Activity):
                             Gtk.PositionType.RIGHT, STATS_WIDTH, 35)
         grid.attach_next_to(eb_total_contribs, eb_journal_entries,
                             Gtk.PositionType.RIGHT, STATS_WIDTH, 35)
-        grid.attach_next_to(eb_tree, eb_total_activities,
+        grid.attach_next_to(eb_heatmap, eb_total_activities,
+                            Gtk.PositionType.BOTTOM, HMAP_WIDTH, 75)
+        grid.attach_next_to(eb_tree, eb_heatmap,
                             Gtk.PositionType.BOTTOM, TP_WIDTH, 90)
         grid.attach_next_to(eb_pie, eb_tree,
                             Gtk.PositionType.RIGHT, TP_WIDTH, 90)
-        grid.attach_next_to(eb_heatmap, eb_tree,
-                            Gtk.PositionType.BOTTOM, HMAP_WIDTH, 75)
+        
         grid.show_all()
 
     def _ds_updated(self, i):
@@ -540,16 +507,20 @@ class DashboardActivity(activity.Activity):
             grid.attach(box, j, k, 1, 1)
 
     def _on_clicked_cb(self, i, index):
-        self.heatmap_liststore.clear()
         del self.heatmap_list[:]
-
         for y in range(0, len(self.old_list)):
             date = self.old_list[y][7][:-16]
             if date == self.dates[index]:
                 self.heatmap_list.append(self.old_list[y])
-
-        for item in self.heatmap_list:
-            self.heatmap_liststore.append(item)
+        
+        model = self.combobox.get_model()
+        size = model.get_value(model[-1].iter, 0)
+        if len(size) == 10:
+            model.remove(model[-1].iter)
+        # self.cbox_store.remove(model[-1].iter)
+        self.cbox_store.append([self.dates[index]])
+        self.combobox.set_active(3)
+        self._add_to_treeview(self.heatmap_list)
 
     def _generate_dates(self):
         year = datetime.date.today().year
@@ -589,6 +560,8 @@ class DashboardActivity(activity.Activity):
                 self._add_to_treeview(self.treeview_list)
             elif selected_item == "Oldest":
                 self._add_to_treeview(self.old_list)
+            else:
+                self._add_to_treeview(self.heatmap_list)
 
     def _item_select_cb(self, selection):
         model, row = selection.get_selected()
